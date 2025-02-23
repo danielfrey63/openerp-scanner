@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@danielfrey63/openerp-ts-client": "^1.0.3",
+    "@danielfrey63/openerp-ts-client": "^1.0.4",
     "@zxing/browser": "^0.1.4",
     "@zxing/library": "^0.21.0",
     "axios": "^1.4.0",
@@ -22,6 +22,7 @@
     "react-router-dom": "^6.14.2",
     "stream-browserify": "^3.0.0",
     "timers-browserify": "^2.0.12",
+    "util": "^0.12.5",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
@@ -29,8 +30,8 @@
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@types/xml2js": "^0.4.11",
-    "@vitejs/plugin-react": "^4.0.3",
+    "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "vite": "^5.0.0"
   }
 }

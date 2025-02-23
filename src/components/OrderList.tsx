@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OpenERPClient } from '../../../client/dist/client';
+import { OpenERPClient } from '@danielfrey63/openerp-ts-client';
 
 interface Order {
   id: number;
