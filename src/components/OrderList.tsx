@@ -16,7 +16,12 @@ const OrderList: React.FC = () => {
   React.useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const client = new OpenERPClient({ baseUrl: 'http://localhost:8069' });
+        const baseUrl = import.meta.env.VITE_OPENERP_BASE_URL;
+        if (!baseUrl) {
+          throw new Error('OpenERP base URL is not configured');
+        }
+        
+        const client = new OpenERPClient({ baseUrl: import.meta.env.VITE_OPENERP_BASE_URL });
         const orders = await client.getOpenSaleOrders();
         setOrders(orders);
       } catch (err) {
@@ -35,6 +40,7 @@ const OrderList: React.FC = () => {
     <div className="orders-list">
       <h2>Open Sale Orders</h2>
       {error && <div className="error">{error}</div>}
+      {orders.length === 0 && !error && <div>Loading orders...</div>}
       {orders.map(order => (
         <div
           key={order.id}
