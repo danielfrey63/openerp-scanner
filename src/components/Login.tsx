@@ -68,14 +68,36 @@ const Login: React.FC = () => {
       };
       const client = new OpenERPClient(config);
       
-      await client.login({ db: selectedDb, username, password });
+      console.log('Attempting login to:', baseUrl);
+      console.log('Database:', selectedDb);
+      console.log('Username:', username);
       
-      // Store the authenticated client in context
-      setClient(client);
-      
-      navigate('/orders');
+      try {
+        await client.login({ db: selectedDb, username, password });
+        
+        // Store the authenticated client in context
+        setClient(client);
+        
+        navigate('/orders');
+      } catch (loginError) {
+        console.error('Login API error:', loginError);
+        let errorMessage = 'Login failed';
+        
+        if (loginError && typeof loginError === 'object') {
+          if ('fault' in loginError) {
+            const fault = (loginError as any).fault;
+            errorMessage += ': ' + (fault?.message || fault?.string || JSON.stringify(fault));
+          } else {
+            errorMessage += ': ' + (loginError.message || JSON.stringify(loginError));
+          }
+        } else {
+          errorMessage += ': ' + String(loginError);
+        }
+        
+        setError(errorMessage);
+      }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Login setup error:', err);
       setError(err instanceof Error ? err.message : 'Login failed. Please check your credentials.');
     }
   };

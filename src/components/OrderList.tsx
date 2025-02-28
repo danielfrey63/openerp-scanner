@@ -21,10 +21,23 @@ const OrderList: React.FC = () => {
           throw new Error('Not authenticated');
         }
         
-        const orders = await client.getOpenSaleOrders();
-        setOrders(orders);
+        try {
+          const orders = await client.getOpenSaleOrders();
+          setOrders(orders);
+        } catch (apiError) {
+          console.error('API Error:', apiError);
+          // Sicherere Fehlerbehandlung
+          let errorMessage = 'Failed to fetch orders';
+          if (apiError && typeof apiError === 'object') {
+            errorMessage += ': ' + (apiError.message || JSON.stringify(apiError));
+          } else {
+            errorMessage += ': ' + String(apiError);
+          }
+          setError(errorMessage);
+        }
       } catch (err) {
-        setError('Failed to fetch orders: ' + (err instanceof Error ? err.message : String(err)));
+        console.error('Authentication Error:', err);
+        setError('Authentication error: ' + (err instanceof Error ? err.message : String(err)));
         
         // If not authenticated, redirect to login
         if (err instanceof Error && err.message === 'Not authenticated') {
@@ -55,10 +68,23 @@ const OrderList: React.FC = () => {
                     throw new Error('Not authenticated');
                   }
                   
-                  const orders = await client.getOpenSaleOrders();
-                  setOrders(orders);
+                  try {
+                    const orders = await client.getOpenSaleOrders();
+                    setOrders(orders);
+                  } catch (apiError) {
+                    console.error('API Error:', apiError);
+                    // Sicherere Fehlerbehandlung
+                    let errorMessage = 'Failed to fetch orders';
+                    if (apiError && typeof apiError === 'object') {
+                      errorMessage += ': ' + (apiError.message || JSON.stringify(apiError));
+                    } else {
+                      errorMessage += ': ' + String(apiError);
+                    }
+                    setError(errorMessage);
+                  }
                 } catch (err) {
-                  setError('Failed to fetch orders: ' + (err instanceof Error ? err.message : String(err)));
+                  console.error('Authentication Error:', err);
+                  setError('Authentication error: ' + (err instanceof Error ? err.message : String(err)));
                   
                   // If not authenticated, redirect to login
                   if (err instanceof Error && err.message === 'Not authenticated') {
