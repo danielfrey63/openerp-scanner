@@ -1,8 +1,9 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOpenERP } from '../context/OpenERPContext';
+import { OrderLine as ClientOrderLine } from '@danielfrey63/openerp-ts-client';
 
-interface OrderLine {
+interface OrderLine extends ClientOrderLine {
   id: number;
   product_id: [number, string];
   product_uom_qty: number;
@@ -29,7 +30,12 @@ const OrderDetails: React.FC = () => {
         }
 
         const lines = await client.getSaleOrderLines(parseInt(orderId));
-        setOrderLines(lines);
+        // Convert the returned lines to match our OrderLine interface
+        const typedLines = lines.map(line => ({
+          ...line,
+          id: (line as any).id || Math.random() // Use existing id or generate a random one
+        })) as OrderLine[];
+        setOrderLines(typedLines);
       } catch (err) {
         setError('Failed to fetch order lines: ' + (err instanceof Error ? err.message : String(err)));
         

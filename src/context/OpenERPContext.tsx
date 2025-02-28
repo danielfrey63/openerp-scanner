@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { OpenERPClient, OpenERPConfig, Session } from '@danielfrey63/openerp-ts-client';
+import { OpenERPClient, Session } from '@danielfrey63/openerp-ts-client';
 
 interface OpenERPContextType {
   client: OpenERPClient | null;
