@@ -3,6 +3,7 @@ import App from './App';
 import Login from './components/Login';
 import OrderList from './components/OrderList';
 import OrderDetails from './components/OrderDetails';
+import ProtectedRoute from './components/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -15,11 +16,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/orders',
-        element: <OrderList />
+        element: <ProtectedRoute><OrderList /></ProtectedRoute>
       },
       {
         path: '/orders/:orderId',
-        element: <OrderDetails />
+        element: <ProtectedRoute><OrderDetails /></ProtectedRoute>
       }
     ]
   }

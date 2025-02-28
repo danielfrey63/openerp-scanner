@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useOpenERP } from '../context/OpenERPContext';
 
 interface OrderLine {
   id: number;
@@ -14,26 +15,35 @@ const OrderDetails: React.FC = () => {
   const [selectedLine, setSelectedLine] = React.useState<number | null>(null);
   const [scanning, setScanning] = React.useState(false);
   const [error, setError] = React.useState('');
+  const { client, isAuthenticated } = useOpenERP();
 
   React.useEffect(() => {
-    // TODO: Implement fetching order lines from OpenERP
     const fetchOrderLines = async () => {
       try {
-        // Placeholder data
-        const mockOrderLines: OrderLine[] = [
-          { id: 1, product_id: [1, 'Product A'], product_uom_qty: 2 },
-          { id: 2, product_id: [2, 'Product B'], product_uom_qty: 1 },
-        ];
-        setOrderLines(mockOrderLines);
+        if (!client || !isAuthenticated) {
+          throw new Error('Not authenticated');
+        }
+
+        if (!orderId) {
+          throw new Error('Order ID is required');
+        }
+
+        const lines = await client.getSaleOrderLines(parseInt(orderId));
+        setOrderLines(lines);
       } catch (err) {
-        setError('Failed to fetch order lines');
+        setError('Failed to fetch order lines: ' + (err instanceof Error ? err.message : String(err)));
+        
+        // If not authenticated, redirect to login
+        if (err instanceof Error && err.message === 'Not authenticated') {
+          navigate('/');
+        }
       }
     };
 
     if (orderId) {
       fetchOrderLines();
     }
-  }, [orderId]);
+  }, [client, isAuthenticated, orderId, navigate]);
 
   const startScanning = async () => {
     if (selectedLine === null) return;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OpenERPClient, OpenERPConfig } from '@danielfrey63/openerp-ts-client';
+import { useOpenERP } from '../context/OpenERPContext';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -10,6 +11,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { setClient } = useOpenERP();
 
   useEffect(() => {
     const fetchDatabases = async () => {
@@ -67,6 +69,10 @@ const Login: React.FC = () => {
       const client = new OpenERPClient(config);
       
       await client.login({ db: selectedDb, username, password });
+      
+      // Store the authenticated client in context
+      setClient(client);
+      
       navigate('/orders');
     } catch (err) {
       console.error('Login error:', err);
