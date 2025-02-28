@@ -29,7 +29,7 @@ const OrderList: React.FC = () => {
           // Sicherere Fehlerbehandlung
           let errorMessage = 'Failed to fetch orders';
           if (apiError && typeof apiError === 'object') {
-            errorMessage += ': ' + (apiError.message || JSON.stringify(apiError));
+            errorMessage += ': ' + ((apiError as any).message || JSON.stringify(apiError));
           } else {
             errorMessage += ': ' + String(apiError);
           }
@@ -76,7 +76,7 @@ const OrderList: React.FC = () => {
                     // Sicherere Fehlerbehandlung
                     let errorMessage = 'Failed to fetch orders';
                     if (apiError && typeof apiError === 'object') {
-                      errorMessage += ': ' + (apiError.message || JSON.stringify(apiError));
+                      errorMessage += ': ' + ((apiError as any).message || JSON.stringify(apiError));
                     } else {
                       errorMessage += ': ' + String(apiError);
                     }

@@ -88,7 +88,7 @@ const Login: React.FC = () => {
             const fault = (loginError as any).fault;
             errorMessage += ': ' + (fault?.message || fault?.string || JSON.stringify(fault));
           } else {
-            errorMessage += ': ' + (loginError.message || JSON.stringify(loginError));
+            errorMessage += ': ' + ((loginError as any).message || JSON.stringify(loginError));
           }
         } else {
           errorMessage += ': ' + String(loginError);
