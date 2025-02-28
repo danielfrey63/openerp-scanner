@@ -86,6 +86,9 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-form">
+      <div className="header-container">
+        <h2>OpenERP Login</h2>
+      </div>
       {error && <div className="error">{error}</div>}
       <form onSubmit={handleLogin}>
         <select
@@ -112,7 +115,11 @@ const Login: React.FC = () => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit">Login</button>
+        <button type="submit" className="default icon-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
+          </svg>
+        </button>
       </form>
     </div>
   );

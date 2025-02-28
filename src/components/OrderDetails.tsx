@@ -59,7 +59,20 @@ const OrderDetails: React.FC = () => {
 
   return (
     <div className="order-details">
-      <h2>Order Details</h2>
+      <div className="header-container">
+        <h2>Order Details</h2>
+        <div className="action-buttons">
+          <button 
+            onClick={() => navigate('/orders')} 
+            className="default icon-button" 
+            title="Back to Orders"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
       {error && <div className="error">{error}</div>}
       <div className="order-lines">
         {orderLines.map((line, index) => (
@@ -83,7 +96,6 @@ const OrderDetails: React.FC = () => {
           )}
         </div>
       )}
-      <button onClick={() => navigate('/orders')}>Back to Orders</button>
     </div>
   );
 };
