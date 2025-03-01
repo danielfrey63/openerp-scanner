@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useOpenERP } from '../context/OpenERPContext';
 import { OrderLine as ClientOrderLine } from '@danielfrey63/openerp-ts-client';
 import BackIcon from '../icons/back-icon.svg';
+import ScanIcon from '../icons/scan-icon.svg';
+import logo from '../icons/logo.svg';
 
 interface OrderLine extends ClientOrderLine {
   id: number;
@@ -61,7 +63,10 @@ const OrderDetails: React.FC = () => {
   return (
     <div className="list">
       <div className="header-container">
-        <h2>Order Details</h2>
+        <div className="title-with-logo">
+          <img src={logo} alt="Logo" className="header-logo" />
+          <h2>Order Details</h2>
+        </div>
         <div className="action-buttons">
           <button 
             onClick={() => navigate('/orders')} 

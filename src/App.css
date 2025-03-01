@@ -113,12 +113,21 @@ h2 {
 /* Header container with title and action buttons */
 .header-container {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding-top: 8px;
+  align-items: center;
+  padding: 10px;
+  background-color: #1e1e1e;
+  border-bottom: 1px solid #333;
+}
+
+.title-with-logo {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  height: 30px;
+  margin-right: 10px;
 }
 
 .header-container h2 {
