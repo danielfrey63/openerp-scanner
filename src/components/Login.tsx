@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OpenERPClient, OpenERPConfig } from '@danielfrey63/openerp-ts-client';
 import { useOpenERP } from '../context/OpenERPContext';
+import LoginIcon from '../icons/login-icon.svg';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -9,7 +10,6 @@ const Login: React.FC = () => {
   const [databases, setDatabases] = useState<string[]>([]);
   const [selectedDb, setSelectedDb] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { setClient } = useOpenERP();
 
@@ -38,19 +38,17 @@ const Login: React.FC = () => {
         if (dbs.length > 0) {
           setSelectedDb(dbs[0]);
         }
-        setLoading(false);
       } catch (err) {
         console.error('Error fetching databases:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch databases. Please check server connection.');
-        setLoading(false);
       }
     };
 
     fetchDatabases();
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!selectedDb) {
       setError('Please select a database');
       return;
@@ -102,46 +100,53 @@ const Login: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return <div className="login-form">Loading databases...</div>;
-  }
-
   return (
-    <div className="login-form">
+    <div className="list">
       <div className="header-container">
         <h2>OpenERP Login</h2>
+        <div className="action-buttons">
+          <button 
+            type="submit" 
+            className="default icon-button"
+            onClick={handleLogin}
+            title="Login"
+          >
+            <img src={LoginIcon} alt="Login" />
+          </button>
+        </div>
       </div>
       {error && <div className="error">{error}</div>}
-      <form onSubmit={handleLogin}>
-        <select
-          value={selectedDb}
-          onChange={(e) => setSelectedDb(e.target.value)}
-          required
-        >
-          <option value="">Select Database</option>
-          {databases.map(db => (
-            <option key={db} value={db}>{db}</option>
-          ))}
-        </select>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit" className="default icon-button">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/>
-          </svg>
-        </button>
+      <form>
+        <div className="item">
+          <select
+            value={selectedDb}
+            onChange={(e) => setSelectedDb(e.target.value)}
+            required
+          >
+            <option value="">Select Database</option>
+            {databases.map(db => (
+              <option key={db} value={db}>{db}</option>
+            ))}
+          </select>
+        </div>
+        <div className="item">
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+        <div className="item">
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
       </form>
     </div>
   );

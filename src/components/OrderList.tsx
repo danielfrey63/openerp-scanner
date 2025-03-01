@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOpenERP } from '../context/OpenERPContext';
+import BackIcon from '../icons/back-icon.svg';
+import RefreshIcon from '../icons/refresh-icon.svg';
 
 interface Order {
   id: number;
@@ -54,10 +56,18 @@ const OrderList: React.FC = () => {
   };
 
   return (
-    <div className="orders-list">
+    <div className="list">
       <div className="header-container">
         <h2>Open Sale Orders</h2>
         <div className="action-buttons">
+          <button 
+            onClick={() => navigate('/')} 
+            className="icon-button secondary" 
+            title="Back to Login"
+            style={{ backgroundColor: '#1e1e1e' }}
+          >
+            <img src={BackIcon} alt="Back" />
+          </button>
           <button 
             onClick={() => {
               setOrders([]);
@@ -97,18 +107,15 @@ const OrderList: React.FC = () => {
             className="default icon-button" 
             title="Refresh Orders"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-            </svg>
+            <img src={RefreshIcon} alt="Refresh" />
           </button>
         </div>
       </div>
       {error && <div className="error">{error}</div>}
-      {orders.length === 0 && !error && <div>Loading orders...</div>}
       {orders.map(order => (
         <div
           key={order.id}
-          className="order-item"
+          className="item"
           onClick={() => handleOrderClick(order.id)}
         >
           {order.name} - {order.partner_id[1]}

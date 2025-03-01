@@ -15,12 +15,9 @@
 }
 
 /* Content container with margins */
-.orders-list,
-.order-details,
-.login-form,
-.main-content {
+.list {
   width: 90%;
-  max-width: 800px;
+  max-width: 400px;
   margin-left: auto;
   margin-right: auto;
   padding: 0 15px;
@@ -34,62 +31,41 @@
   color: #ff6b6b;
   padding: 15px;
   margin: 20px auto;
-  border-radius: 4px;
+  border-radius: 8px;
   width: 90%;
-  max-width: 350px;
+  max-width: 400px;
   text-align: center;
   border: none;
 }
 
-/* Login form */
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.login-form select,
-.login-form input {
-  padding: 12px 15px;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  width: 100%;
-  background-color: #2c2c2c;
+.item select,
+.item input {
+  width: 95%;
+  padding: 8px;
+  background-color: transparent;
   color: #e0e0e0;
-  box-sizing: border-box;
-  margin-bottom: 3px;
-}
-
-.login-form button {
-  background-color: #2c2c2c;
-  color: white;
-  padding: 12px;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
   font-size: 16px;
-  width: 100%;
-  margin-top: 10px;
 }
 
-.login-form button:hover {
-  background-color: #3a3a3a;
+.item select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('../src/icons/dropdown-icon.svg');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px;
 }
 
-/* Main content */
-.main-content {
-  margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+button.secondary .item select,
+.secondary .item select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5z' fill='white'/%3E%3C/svg%3E");
 }
 
-/* Orders list */
-/* Sticky headers */
-.orders-list h2,
-.order-details h2,
-.login-form h2 {
+/* Headers */
+h2 {
   position: static;
   margin-bottom: 0;
   padding: 0;
@@ -97,10 +73,10 @@
   background-color: transparent;
 }
 
-/* Gemeinsame Stile für alle Listenelemente */
-.order-item, .line-item {
+/* List items */
+.item {
   padding: 8px;
-  border: 1px solid #333;
+  border: 2px solid #333;
   margin-bottom: 3px;
   margin-top: 10px;
   border-radius: 8px;
@@ -115,11 +91,11 @@
   box-sizing: border-box;
 }
 
-.order-item:hover, .line-item:hover {
+.item:hover {
   background-color: #2c2c2c;
 }
 
-.line-item.selected {
+.item.selected {
   background-color: #1976d2;
   border-color: #2196f3;
 }
@@ -131,23 +107,57 @@
   justify-content: space-between;
   position: sticky;
   top: 0;
-  background-color: #121212;
   z-index: 10;
-  padding: 8px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  padding-top: 8px;
 }
 
 .header-container h2 {
   color: #e0e0e0;
   margin: 0;
-  text-align: center;
+  text-align: left;
   flex-grow: 1;
 }
 
 .action-buttons {
   display: flex;
   gap: 10px;
-  margin-right: 10px;
+  margin-left: 10px;
+}
+
+/* Button styles - simplified to two types */
+
+/* Base button style (applies to all buttons) */
+button {
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 10px 16px;
+  font-size: 14px;
+  margin: 10px auto;
+}
+
+/* Default button style */
+button.default {
+  background-color: #e0e0e0;
+  color: #121212;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+button.default:hover {
+  background-color: hsl(0, 0%, 80%);
+  transform: scale(1.1);
+}
+
+/* Secondary button style (default if no class specified) */
+button:not(.default) {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+button:not(.default):hover {
+  background-color: #2c2c2c;
+  transform: scale(1.1);
 }
 
 /* Icon button styles */
@@ -158,22 +168,27 @@
   width: 40px;
   height: 40px;
   padding: 8px;
-  border-radius: 50%;
-  background-color: #ffffff;
-  color: #121212;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
+  margin: 0;
 }
 
-.icon-button:hover {
-  background-color: #e0e0e0;
-  transform: scale(1.05);
-}
-
+.icon-button img,
 .icon-button svg {
   width: 24px;
   height: 24px;
+}
+
+/* Direct rule for back button with !important to override any other styles */
+button.icon-button.secondary img[src*="back-icon"] {
+  filter: brightness(0) invert(1) !important;
+}
+
+/* SVG color filters for different button types */
+button.secondary img,
+button.icon-button.secondary img,
+button.icon-button:not(.default) img,
+button.icon-button.secondary svg,
+button.icon-button:not(.default) svg {
+  filter: brightness(0) invert(1) !important; /* Makes black icons white with higher priority */
 }
 
 /* Form button (login) */
@@ -182,12 +197,12 @@ form .icon-button {
   align-self: center;
 }
 
-/* Content area padding adjustment */
-.orders-list > div:not(.header-container),
-.order-details > div:not(.header-container),
-.login-form > form,
-.login-form > .error {
-  margin-top: 10px;
+/* Scanner section button */
+.scanner-section button {
+  padding: 12px 20px;
+  font-size: 16px;
+  margin-top: 15px;
+  display: block;
 }
 
 /* Scanner section */
@@ -213,51 +228,10 @@ form .icon-button {
   border: 1px solid #333;
 }
 
-/* Buttons */
-button {
-  background-color: #2c2c2c;
-  color: white;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
-  margin: 10px auto;
-  display: block;
-}
-
-button:hover {
-  background-color: #3a3a3a;
-}
-
-/* Default button style */
-button.default, 
-.button-default {
-  background-color: white;
-  color: black;
-  font-weight: 500;
-}
-
-button.default:hover,
-.button-default:hover {
-  background-color: #e0e0e0;
-}
-
-/* Add global styles */
+/* Global styles */
 body {
   margin: 0;
   padding: 0;
   background-color: #121212;
   color: #e0e0e0;
-}
-
-/* Dropdown styling */
-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e0e0e0%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 12px;
-  padding-right: 30px;
 }

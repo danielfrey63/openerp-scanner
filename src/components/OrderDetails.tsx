@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOpenERP } from '../context/OpenERPContext';
 import { OrderLine as ClientOrderLine } from '@danielfrey63/openerp-ts-client';
+import BackIcon from '../icons/back-icon.svg';
 
 interface OrderLine extends ClientOrderLine {
   id: number;
@@ -58,7 +59,7 @@ const OrderDetails: React.FC = () => {
   };
 
   return (
-    <div className="order-details">
+    <div className="list">
       <div className="header-container">
         <h2>Order Details</h2>
         <div className="action-buttons">
@@ -67,11 +68,7 @@ const OrderDetails: React.FC = () => {
             className="default icon-button" 
             title="Back to Orders"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <line x1="12" y1="19" x2="5" y2="12" />
-              <line x1="12" y1="5" x2="5" y2="12" />
-            </svg>
+            <img src={BackIcon} alt="Back" />
           </button>
         </div>
       </div>
@@ -87,7 +84,7 @@ const OrderDetails: React.FC = () => {
             return (
               <div
                 key={line.id}
-                className={`line-item ${selectedLine === index ? 'selected' : ''}`}
+                className={`item ${selectedLine === index ? 'selected' : ''}`}
                 onClick={() => setSelectedLine(index)}
               >
                 {line.product_uom_qty}x {productCode}
