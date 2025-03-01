@@ -57,6 +57,7 @@
   background-position: right 8px center;
   background-size: 16px;
   padding-right: 30px;
+  filter: invert(1);
 }
 
 button.secondary .item select,
