@@ -35,9 +35,6 @@ const Login: React.FC = () => {
         }
 
         setDatabases(dbs);
-        if (dbs.length > 0) {
-          setSelectedDb(dbs[0]);
-        }
       } catch (err) {
         console.error('Error fetching databases:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch databases. Please check server connection.');
@@ -123,7 +120,7 @@ const Login: React.FC = () => {
             onChange={(e) => setSelectedDb(e.target.value)}
             required
           >
-            <option value="">Select Database</option>
+            <option value="" disabled>Select Database</option>
             {databases.map(db => (
               <option key={db} value={db}>{db}</option>
             ))}
