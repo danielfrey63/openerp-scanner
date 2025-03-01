@@ -68,7 +68,6 @@ const OrderList: React.FC = () => {
             onClick={() => navigate('/')} 
             className="icon-button secondary" 
             title="Back to Login"
-            style={{ backgroundColor: '#1e1e1e' }}
           >
             <img src={BackIcon} alt="Back" />
           </button>

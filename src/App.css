@@ -115,9 +115,7 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  background-color: #1e1e1e;
-  border-bottom: 1px solid #333;
+  padding-top: 10px;
 }
 
 .title-with-logo {
@@ -126,7 +124,7 @@ h2 {
 }
 
 .header-logo {
-  height: 30px;
+  height: 40px;
   margin-right: 10px;
 }
 
