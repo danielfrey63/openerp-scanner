@@ -40,12 +40,12 @@
 
 .item select,
 .item input {
-  width: 95%;
+  width: 100%;
   padding: 8px;
   background-color: transparent;
-  color: #e0e0e0;
   border: none;
   font-size: 16px;
+  box-sizing: border-box;
 }
 
 .item select {
@@ -57,7 +57,13 @@
   background-position: right 8px center;
   background-size: 16px;
   padding-right: 30px;
-  filter: invert(1);
+  filter: invert(1); /* Flip colors of the dropdown icon */
+}
+
+/* Dropdown option styling */
+.item select option {
+  background-color: white;
+  color: black;
 }
 
 button.secondary .item select,
