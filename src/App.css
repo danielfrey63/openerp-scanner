@@ -48,6 +48,9 @@
   box-sizing: border-box;
 }
 
+.item input {
+  color: #e0e0e0;
+}
 .item select {
   -webkit-appearance: none;
   -moz-appearance: none;
