@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Configuration to fix Node.js module warnings in the browser
 export default defineConfig({
   define: {
     'process.env': {},
