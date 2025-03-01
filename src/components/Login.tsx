@@ -117,7 +117,7 @@ const Login: React.FC = () => {
         </div>
       </div>
       {error && <div className="error">{error}</div>}
-      <form>
+      <form onSubmit={handleLogin}>
         <div className="item">
           <select
             value={selectedDb}
@@ -147,6 +147,9 @@ const Login: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+        </div>
+        <div className="action-buttons" style={{ display: 'none' }}>
+          <button type="submit">Login</button>
         </div>
       </form>
     </div>
