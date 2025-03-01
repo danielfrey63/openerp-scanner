@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useOpenERP } from '../context/OpenERPContext';
 import { OrderLine as ClientOrderLine } from '@danielfrey63/openerp-ts-client';
 import BackIcon from '../icons/back-icon.svg';
-import ScanIcon from '../icons/scan-icon.svg';
 import logo from '../icons/logo.svg';
 
 interface OrderLine extends ClientOrderLine {
