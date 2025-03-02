@@ -2,6 +2,7 @@
   "name": "openerp-scanner-app",
   "version": "1.0.0",
   "description": "OpenERP Scanner App for iPhone",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "vite",
@@ -10,6 +11,7 @@
   },
   "dependencies": {
     "@danielfrey63/openerp-ts-client": "^1.0.10",
+    "@yudiel/react-qr-scanner": "^2.2.1",
     "@zxing/browser": "^0.1.4",
     "@zxing/library": "^0.21.0",
     "axios": "^1.4.0",
@@ -17,6 +19,7 @@
     "cookie": "^0.5.0",
     "dotenv": "^16.3.1",
     "events": "^3.3.0",
+    "qr-scanner": "^1.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.2.0",

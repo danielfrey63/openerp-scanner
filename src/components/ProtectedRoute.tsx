@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useOpenERP } from '../context/OpenERPContext';
+import { useOpenERP } from '@/context/OpenERPContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

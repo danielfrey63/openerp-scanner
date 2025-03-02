@@ -1,9 +1,9 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useOpenERP } from '../context/OpenERPContext';
+import { useOpenERP } from '@/context/OpenERPContext';
 import { OrderLine as ClientOrderLine } from '@danielfrey63/openerp-ts-client';
-import BackIcon from '../icons/back-icon.svg';
-import logo from '../icons/logo.svg';
+import BackIcon from '@/icons/back-icon.svg';
+import Logo from '@/icons/logo.svg';
 
 interface OrderLine extends ClientOrderLine {
   id: number;
@@ -63,7 +63,7 @@ const OrderDetails: React.FC = () => {
     <div className="list">
       <div className="header-container">
         <div className="title-with-logo">
-          <img src={logo} alt="Logo" className="header-logo" />
+          <img src={Logo} alt="Logo" className="header-logo" />
           <h2>Order Details</h2>
         </div>
         <div className="action-buttons">

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OpenERPClient, OpenERPConfig } from '@danielfrey63/openerp-ts-client';
-import { useOpenERP } from '../context/OpenERPContext';
-import LoginIcon from '../icons/login-icon.svg';
-import logo from '../icons/logo.svg';
+import { useOpenERP } from "@/context/OpenERPContext";
+import LoginIcon from "@/icons/login-icon.svg";
+import Logo from "@/icons/logo.svg";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -102,7 +102,7 @@ const Login: React.FC = () => {
     <div className="list">
       <div className="header-container">
         <div className="title-with-logo">
-          <img src={logo} alt="Logo" className="header-logo" />
+          <img src={Logo} alt="Logo" className="header-logo" />
           <h2>OpenERP Login</h2>
         </div>
         <div className="action-buttons">

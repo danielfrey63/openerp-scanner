@@ -1,9 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOpenERP } from '../context/OpenERPContext';
-import BackIcon from '../icons/back-icon.svg';
-import RefreshIcon from '../icons/refresh-icon.svg';
-import logo from '../icons/logo.svg';
+import { useOpenERP } from '@/context/OpenERPContext';
+import BackIcon from '@/icons/back-icon.svg';
+import RefreshIcon from '@/icons/refresh-icon.svg';
+import Logo from '@/icons/logo.svg';
 
 interface Order {
   id: number;
@@ -60,7 +60,7 @@ const OrderList: React.FC = () => {
     <div className="list">
       <div className="header-container">
         <div className="title-with-logo">
-          <img src={logo} alt="Logo" className="header-logo" />
+          <img src={Logo} alt="Logo" className="header-logo" />
           <h2>Open Sale Orders</h2>
         </div>
         <div className="action-buttons">

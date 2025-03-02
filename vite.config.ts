@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import path from 'path'
 
 // Configuration to fix Node.js module warnings in the browser
 export default defineConfig({
@@ -9,6 +11,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@': path.resolve(__dirname, './src'),
       stream: 'stream-browserify',
       timers: 'timers-browserify',
       buffer: 'buffer',
@@ -23,5 +26,8 @@ export default defineConfig({
       }
     }
   },
-  plugins: [react()]
+  plugins: [
+    react(),
+    nodePolyfills()
+  ]
 })
