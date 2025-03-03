@@ -188,16 +188,19 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       
       {error && <div className="error">{error}</div>}
       
-      <div className="scanning-indicator" style={{ 
+      <div className="scanning-indicator" style={{
         display: continuousScanActive && isScanning ? 'block' : 'none',
         position: 'absolute',
         top: '10px',
         right: '10px',
-        backgroundColor: 'rgba(0, 255, 0, 0.5)',
-        color: 'white',
+        backgroundColor: 'rgba(0, 255, 0, 0.8)',
+        color: 'black',
         padding: '5px 10px',
         borderRadius: '4px',
-        fontSize: '12px'
+        fontSize: '14px',
+        fontWeight: 'bold',
+        zIndex: 1000,
+        border: '2px solid green'
       }}>
         QR-Code wird gesucht...
       </div>
