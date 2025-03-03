@@ -154,6 +154,8 @@ const Login: React.FC = () => {
             onChange={(e) => setUsername(e.target.value)}
             required
             className={!username ? 'required-field' : ''}
+            autoCapitalize="off"
+            autoComplete="username"
           />
         </div>
         <div className="item">
