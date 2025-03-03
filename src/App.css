@@ -206,7 +206,6 @@ button.disabled {
 button:disabled:hover,
 button.disabled:hover {
   transform: none !important;
-  background-color: inherit;
 }
 
 /* SVG color filters for different button types */
@@ -261,22 +260,6 @@ form .icon-button {
   flex-direction: column;
   align-items: center;
   margin: 20px 0;
-}
-
-.file-upload-button {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.2s;
-  display: inline-block;
-  text-align: center;
-}
-
-.file-upload-button:hover {
-  background-color: var(--primary-color-dark);
-  transform: scale(1.05);
 }
 
 /* Camera Styles */

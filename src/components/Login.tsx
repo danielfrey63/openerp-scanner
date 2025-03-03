@@ -47,8 +47,20 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    
+    // Validate all required fields
     if (!selectedDb) {
-      setError('Please select a database');
+      setError('Bitte wählen Sie eine Datenbank aus');
+      return;
+    }
+    
+    if (!username) {
+      setError('Bitte geben Sie einen Benutzernamen ein');
+      return;
+    }
+    
+    if (!password) {
+      setError('Bitte geben Sie ein Passwort ein');
       return;
     }
 
@@ -108,9 +120,12 @@ const Login: React.FC = () => {
         <div className="action-buttons">
           <button 
             type="submit" 
-            className="default icon-button"
+            className={`icon-button ${selectedDb && username && password ? 'default' : 'disabled'}`}
             onClick={handleLogin}
-            title="Login"
+            disabled={!selectedDb || !username || !password}
+            title={!selectedDb ? "Bitte zuerst eine Datenbank auswählen" : 
+                  !username ? "Bitte Benutzernamen eingeben" :
+                  !password ? "Bitte Passwort eingeben" : "Login"}
           >
             <img src={LoginIcon} alt="Login" />
           </button>
@@ -123,8 +138,9 @@ const Login: React.FC = () => {
             value={selectedDb}
             onChange={(e) => setSelectedDb(e.target.value)}
             required
+            className={!selectedDb ? 'required-field' : ''}
           >
-            <option value="" disabled>Select Database</option>
+            <option value="" disabled>Datenbank auswählen *</option>
             {databases.map(db => (
               <option key={db} value={db}>{db}</option>
             ))}
@@ -133,19 +149,21 @@ const Login: React.FC = () => {
         <div className="item">
           <input
             type="text"
-            placeholder="Username"
+            placeholder="Benutzername *"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            className={!username ? 'required-field' : ''}
           />
         </div>
         <div className="item">
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Passwort *"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className={!password ? 'required-field' : ''}
           />
         </div>
         <div className="action-buttons" style={{ display: 'none' }}>
