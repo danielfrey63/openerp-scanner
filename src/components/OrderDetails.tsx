@@ -6,7 +6,7 @@ import BackIcon from '@/icons/back-icon.svg';
 import Logo from '@/icons/logo.svg';
 import UploadIcon from '@/icons/upload-icon.svg';
 import CameraIcon from '@/icons/camera-icon.svg';
-import Camera from '@/components/Camera';
+import Camera from './Camera';
 import { qrCodeScanner } from './QRCodeScanner';
 
 interface OrderLine extends ClientOrderLine {
@@ -158,7 +158,10 @@ const OrderDetails: React.FC = () => {
       
       {showCamera && (
         <div className="scanner-section">
-          <Camera onScanComplete={handleScanComplete} />
+          <Camera 
+            onScanComplete={handleScanComplete} 
+            onClose={() => setShowCamera(false)}
+          />
         </div>
       )}
       
