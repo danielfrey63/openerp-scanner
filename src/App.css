@@ -245,6 +245,57 @@ form .icon-button {
   border: 1px solid #333;
 }
 
+/* File Upload Styles */
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.file-upload-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  display: inline-block;
+  text-align: center;
+}
+
+.file-upload-button:hover {
+  background-color: var(--primary-color-dark);
+  transform: scale(1.05);
+}
+
+/* Camera Styles */
+.camera-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.camera-video {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+/* Scanner Section */
+.scanner-section {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto 20px;
+  padding: 15px;
+  background-color: var(--background-color-light);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
 /* Global styles */
 body {
   margin: 0;

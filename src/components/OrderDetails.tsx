@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOpenERP } from '@/context/OpenERPContext';
 import { OrderLine as ClientOrderLine } from '@danielfrey63/openerp-ts-client';
 import BackIcon from '@/icons/back-icon.svg';
 import Logo from '@/icons/logo.svg';
+import UploadIcon from '@/icons/upload-icon.svg';
+import CameraIcon from '@/icons/camera-icon.svg';
+import Camera from '@/components/Camera';
+import { qrCodeScanner } from './QRCodeScanner';
 
 interface OrderLine extends ClientOrderLine {
   id: number;
@@ -14,13 +18,29 @@ interface OrderLine extends ClientOrderLine {
 const OrderDetails: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const [orderLines, setOrderLines] = React.useState<OrderLine[]>([]);
-  const [selectedLine, setSelectedLine] = React.useState<number | null>(null);
-  const [scanning, setScanning] = React.useState(false);
-  const [error, setError] = React.useState('');
+  const [orderLines, setOrderLines] = useState<OrderLine[]>([]);
+  const [selectedLine, setSelectedLine] = useState<number | null>(null);
+  const [error, setError] = useState('');
+  const [showCamera, setShowCamera] = useState(false);
+  const [hasCamera, setHasCamera] = useState<boolean | null>(null);
   const { client, isAuthenticated } = useOpenERP();
 
-  React.useEffect(() => {
+  // Überprüfen, ob das Gerät eine Kamera hat
+  useEffect(() => {
+    const detectCamera = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        setHasCamera(devices.some(device => device.kind === 'videoinput'));
+      } catch (error) {
+        console.error('Camera detection failed:', error);
+        setHasCamera(false);
+      }
+    };
+    
+    detectCamera();
+  }, []);
+
+  useEffect(() => {
     const fetchOrderLines = async () => {
       try {
         if (!client || !isAuthenticated) {
@@ -53,10 +73,10 @@ const OrderDetails: React.FC = () => {
     }
   }, [client, isAuthenticated, orderId, navigate]);
 
-  const startScanning = async () => {
-    if (selectedLine === null) return;
-    setScanning(true);
-    // TODO: Implement scanning logic
+  const handleScanComplete = (data: string) => {
+    console.log('QR Code gescannt:', data);
+    // Hier können Sie später weitere Aktionen mit dem gescannten Code durchführen
+    setShowCamera(false);
   };
 
   return (
@@ -69,14 +89,62 @@ const OrderDetails: React.FC = () => {
         <div className="action-buttons">
           <button 
             onClick={() => navigate('/orders')} 
-            className="default icon-button" 
+            className="icon-button secondary" 
             title="Back to Orders"
           >
             <img src={BackIcon} alt="Back" />
           </button>
+          <button 
+            onClick={() => {
+              // Direkt einen Datei-Input erstellen und klicken
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.onchange = async (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (!file) return;
+                
+                try {
+                  // QR-Code aus dem Bild lesen
+                  const result = await qrCodeScanner.scanFromFile(file);
+                  
+                  if (result) {
+                    handleScanComplete(result);
+                  } else {
+                    console.error('Kein QR-Code im Bild gefunden');
+                  }
+                } catch (err) {
+                  console.error('QR-Code Scan Fehler:', err);
+                }
+              };
+              input.click();
+            }} 
+            className="icon-button" 
+            title="Upload Image"
+          >
+            <img src={UploadIcon} alt="Upload" />
+          </button>
+          {hasCamera && (
+            <button 
+              onClick={() => {
+                setShowCamera(true);
+              }} 
+              className="icon-button default" 
+              title="Take Photo"
+            >
+              <img src={CameraIcon} alt="Camera" />
+            </button>
+          )}
         </div>
       </div>
       {error && <div className="error">{error}</div>}
+      
+      {showCamera && (
+        <div className="scanner-section">
+          <Camera onScanComplete={handleScanComplete} />
+        </div>
+      )}
+      
       <div className="order-lines">
         {orderLines
           .filter(line => line.product_id[1].includes('Champagne'))
@@ -96,17 +164,6 @@ const OrderDetails: React.FC = () => {
             );
           })}
       </div>
-      {selectedLine !== null && (
-        <div className="scanner-section">
-          {scanning ? (
-            <div className="scanner-container">
-              <video id="scanner" />
-            </div>
-          ) : (
-            <button onClick={startScanning}>Scan Product Code</button>
-          )}
-        </div>
-      )}
     </div>
   );
 };
