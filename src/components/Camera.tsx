@@ -116,6 +116,9 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
 
   // Cleanup beim Unmount
   useEffect(() => {
+    // Start camera automatically when component mounts
+    startCamera();
+    
     return () => {
       stopCamera();
     };
@@ -134,12 +137,6 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       {error && <div className="error">{error}</div>}
       
       <div className="camera-controls">
-        {!isScanning && (
-          <button onClick={startCamera} className="default">
-            Kamera starten
-          </button>
-        )}
-        
         {isScanning && (
           <>
             <button onClick={takePhoto} className="default">

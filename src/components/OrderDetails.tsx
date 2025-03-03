@@ -160,33 +160,33 @@ const OrderDetails: React.FC = () => {
       </div>
       {error && <div className="error">{error}</div>}
       
-      {showCamera && (
+      {showCamera ? (
         <div className="scanner-section">
           <Camera 
             onScanComplete={handleScanComplete} 
             onClose={() => setShowCamera(false)}
           />
         </div>
+      ) : (
+        <div className="order-lines">
+          {orderLines
+            .filter(line => line.product_id[1].includes('Champagne'))
+            .map((line, index) => {
+              const productCodeMatch = line.product_id[1].match(/\[(.*?)\]/);
+              const productCode = productCodeMatch ? productCodeMatch[1] : '';
+              
+              return (
+                <div
+                  key={line.id}
+                  className={`item ${selectedLine === index ? 'selected' : ''}`}
+                  onClick={() => {setSelectedLine(selectedLine === index ? null : index);}}
+                >
+                  {line.product_uom_qty}x {productCode}
+                </div>
+              );
+            })}
+        </div>
       )}
-      
-      <div className="order-lines">
-        {orderLines
-          .filter(line => line.product_id[1].includes('Champagne'))
-          .map((line, index) => {
-            const productCodeMatch = line.product_id[1].match(/\[(.*?)\]/);
-            const productCode = productCodeMatch ? productCodeMatch[1] : '';
-            
-            return (
-              <div
-                key={line.id}
-                className={`item ${selectedLine === index ? 'selected' : ''}`}
-                onClick={() => {setSelectedLine(selectedLine === index ? null : index);}}
-              >
-                {line.product_uom_qty}x {productCode}
-              </div>
-            );
-          })}
-      </div>
     </div>
   );
 };
