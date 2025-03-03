@@ -9,8 +9,10 @@ interface CameraProps {
 const Camera = ({ onScanComplete, onClose }: CameraProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
+  const [scanningActive, setScanningActive] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const scanIntervalRef = useRef<number | null>(null);
 
   // Starte die Kamera
   const startCamera = async () => {
@@ -50,6 +52,12 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       
       // Erfolgsmeldung
       console.log('Kamera erfolgreich gestartet');
+      
+      // Warte kurz, bis die Kamera initialisiert ist
+      setTimeout(() => {
+        // Starte kontinuierliches Scannen
+        startContinuousScan();
+      }, 1000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       console.error('Kamera konnte nicht gestartet werden:', err);
@@ -60,6 +68,9 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
 
   // Stoppe die Kamera
   const stopCamera = () => {
+    // Stoppe kontinuierliches Scannen
+    stopContinuousScan();
+    
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
@@ -72,7 +83,83 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
     setIsScanning(false);
   };
 
-  // Mache ein Foto und scanne nach QR-Code
+  // Starte kontinuierliches Scannen
+  const startContinuousScan = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    
+    setScanningActive(true);
+    console.log('Kontinuierliches Scannen gestartet');
+    
+    // Scanne alle 500ms nach QR-Codes
+    scanIntervalRef.current = window.setInterval(() => {
+      console.log('Scanning frame...');
+      scanCurrentFrame();
+    }, 500);
+  };
+
+  // Stoppe kontinuierliches Scannen
+  const stopContinuousScan = () => {
+    console.log('Kontinuierliches Scannen gestoppt');
+    setScanningActive(false);
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+  };
+
+  // Scanne den aktuellen Frame nach QR-Codes
+  const scanCurrentFrame = async () => {
+    if (!videoRef.current || !isScanning) {
+      console.log('Video nicht bereit oder Scannen nicht aktiv');
+      return;
+    }
+    
+    // Überprüfe, ob das Video bereits Daten hat
+    if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+      console.log('Video hat noch keine Dimensionen');
+      return;
+    }
+    
+    try {
+      // Canvas erstellen und Foto machen
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas-Kontext konnte nicht erstellt werden');
+      
+      // Canvas-Größe auf Video-Größe setzen
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      
+      // Video-Frame auf Canvas zeichnen
+      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      
+      // Als Bild exportieren
+      const imageUrl = canvas.toDataURL('image/png');
+      
+      // QR-Code scannen
+      const result = await qrCodeScanner.scanFromImageUrl(imageUrl);
+      
+      if (result) {
+        // Stoppe das kontinuierliche Scannen
+        stopContinuousScan();
+        
+        // Zeige Erfolgsmeldung
+        console.log('QR-Code gefunden:', result);
+        setError('');
+        
+        // Rufe den Callback auf
+        onScanComplete(result);
+      }
+    } catch (err) {
+      // Fehler beim Scannen, aber wir wollen nicht bei jedem Frame einen Fehler anzeigen
+      console.error('Fehler beim Scannen:', err);
+    }
+  };
+
+  // Manuelles Foto aufnehmen und scannen (als Backup)
   const takePhoto = async () => {
     if (!videoRef.current || !isScanning) return;
     
@@ -98,12 +185,6 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       if (result) {
         // Rufe den Callback auf
         onScanComplete(result);
-        
-        // Stoppe die Kamera (optional, je nach Anforderung)
-        // stopCamera();
-        
-        // Schließe die Kamera-Komponente (optional, je nach Anforderung)
-        // if (onClose) onClose();
       } else {
         setError('Kein QR-Code im Bild gefunden');
       }
@@ -111,6 +192,17 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       console.error('Fehler beim Scannen:', err);
       setError('Fehler beim Scannen: ' + errorMessage);
+    }
+  };
+
+  // Toggle kontinuierliches Scannen
+  const toggleContinuousScan = () => {
+    if (scanningActive) {
+      stopContinuousScan();
+      setError('Kontinuierliches Scannen pausiert. Klicken Sie auf "Scannen starten", um fortzufahren.');
+    } else {
+      setError('');
+      startContinuousScan();
     }
   };
 
@@ -136,11 +228,28 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       
       {error && <div className="error">{error}</div>}
       
+      <div className="scanning-indicator" style={{ 
+        display: scanningActive && isScanning ? 'block' : 'none',
+        position: 'absolute',
+        top: '10px',
+        right: '10px',
+        backgroundColor: 'rgba(0, 255, 0, 0.5)',
+        color: 'white',
+        padding: '5px 10px',
+        borderRadius: '4px',
+        fontSize: '12px'
+      }}>
+        QR-Code wird gesucht...
+      </div>
+      
       <div className="camera-controls">
         {isScanning && (
           <>
+            <button onClick={toggleContinuousScan} className={scanningActive ? "secondary" : "default"}>
+              {scanningActive ? "Scannen pausieren" : "Scannen starten"}
+            </button>
             <button onClick={takePhoto} className="default">
-              Foto aufnehmen
+              Manuell scannen
             </button>
             <button onClick={stopCamera} className="secondary">
               Kamera stoppen
