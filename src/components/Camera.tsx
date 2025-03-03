@@ -9,7 +9,7 @@ interface CameraProps {
 const Camera = ({ onScanComplete, onClose }: CameraProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
-  const [scanningActive, setScanningActive] = useState(true);
+  const [continuousScanActive, setContinuousScanActive] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<number | null>(null);
@@ -52,6 +52,11 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       
       // Erfolgsmeldung
       console.log('Kamera erfolgreich gestartet');
+      
+      // Warte kurz, bis die Kamera initialisiert ist
+      setTimeout(() => {
+        startContinuousScan();
+      }, 1000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       console.error('Kamera konnte nicht gestartet werden:', err);
@@ -62,7 +67,6 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
 
   // Stoppe die Kamera
   const stopCamera = () => {
-    // Stoppe kontinuierliches Scannen
     stopContinuousScan();
     
     if (streamRef.current) {
@@ -77,9 +81,43 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
     setIsScanning(false);
   };
 
-  // Mache ein Foto und scanne nach QR-Code
-  const takePhoto = async () => {
+  // Starte kontinuierliches Scannen
+  const startContinuousScan = () => {
+    // Stoppe vorherige Scan-Intervalle
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    
+    setContinuousScanActive(true);
+    console.log('Kontinuierliches Scannen gestartet');
+    
+    // Scanne alle 500ms nach QR-Codes
+    scanIntervalRef.current = window.setInterval(() => {
+      scanCurrentFrame();
+    }, 500);
+  };
+
+  // Stoppe kontinuierliches Scannen
+  const stopContinuousScan = () => {
+    setContinuousScanActive(false);
+    
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    
+    console.log('Kontinuierliches Scannen gestoppt');
+  };
+
+  // Scanne den aktuellen Frame nach QR-Codes
+  const scanCurrentFrame = async () => {
     if (!videoRef.current || !isScanning) return;
+    
+    // Überprüfe, ob das Video bereits Daten hat
+    if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+      return;
+    }
     
     try {
       // Canvas erstellen und Foto machen
@@ -101,23 +139,27 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       const result = await qrCodeScanner.scanFromImageUrl(imageUrl);
       
       if (result) {
+        // Stoppe das kontinuierliche Scannen
+        stopContinuousScan();
+        
+        // Zeige Erfolgsmeldung
+        console.log('QR-Code gefunden:', result);
+        setError('');
+        
         // Rufe den Callback auf
         onScanComplete(result);
-      } else {
-        setError('Kein QR-Code im Bild gefunden');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      // Fehler beim Scannen, aber wir wollen nicht bei jedem Frame einen Fehler anzeigen
       console.error('Fehler beim Scannen:', err);
-      setError('Fehler beim Scannen: ' + errorMessage);
     }
   };
 
   // Toggle kontinuierliches Scannen
   const toggleContinuousScan = () => {
-    if (scanningActive) {
+    if (continuousScanActive) {
       stopContinuousScan();
-      setError('Kontinuierliches Scannen pausiert. Klicken Sie auf "Scannen starten", um fortzufahren.');
+      setError('Kontinuierliches Scannen pausiert');
     } else {
       setError('');
       startContinuousScan();
@@ -146,14 +188,25 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       
       {error && <div className="error">{error}</div>}
       
+      <div className="scanning-indicator" style={{ 
+        display: continuousScanActive && isScanning ? 'block' : 'none',
+        position: 'absolute',
+        top: '10px',
+        right: '10px',
+        backgroundColor: 'rgba(0, 255, 0, 0.5)',
+        color: 'white',
+        padding: '5px 10px',
+        borderRadius: '4px',
+        fontSize: '12px'
+      }}>
+        QR-Code wird gesucht...
+      </div>
+      
       <div className="camera-controls">
         {isScanning && (
           <>
-            <button onClick={toggleContinuousScan} className={scanningActive ? "secondary" : "default"}>
-              {scanningActive ? "Scannen pausieren" : "Scannen starten"}
-            </button>
-            <button onClick={takePhoto} className="default">
-              Manuell scannen
+            <button onClick={toggleContinuousScan} className={continuousScanActive ? "secondary" : "default"}>
+              {continuousScanActive ? "Scannen pausieren" : "Scannen starten"}
             </button>
             <button onClick={stopCamera} className="secondary">
               Kamera stoppen
