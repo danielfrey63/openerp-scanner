@@ -10,6 +10,8 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
   const [continuousScanActive, setContinuousScanActive] = useState(false); // Starte inaktiv
+  const [statusMessage, setStatusMessage] = useState('Kamera wird initialisiert...');
+  const [scanAttempts, setScanAttempts] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<number | null>(null);
@@ -20,6 +22,7 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
     
     setIsScanning(true);
     setError('');
+    setStatusMessage('Kamera wird gestartet...');
 
     try {
       // Versuche verschiedene Kamera-Konfigurationen
@@ -30,8 +33,9 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'environment' }
         });
+        setStatusMessage('Rückkamera aktiviert');
       } catch (e) {
-        console.log('Rückkamera nicht verfügbar, versuche andere Kamera');
+        setStatusMessage('Rückkamera nicht verfügbar, versuche andere Kamera');
       }
       
       // Wenn das nicht funktioniert, versuche irgendeine Kamera
@@ -40,6 +44,7 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true
           });
+          setStatusMessage('Frontkamera aktiviert');
         } catch (e) {
           throw new Error('Keine Kamera verfügbar');
         }
@@ -51,18 +56,18 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       videoRef.current.play();
       
       // Erfolgsmeldung
-      console.log('Kamera erfolgreich gestartet');
+      setStatusMessage('Kamera erfolgreich gestartet, bereite Scannen vor...');
       
       // Warte kurz, bis die Kamera initialisiert ist, dann starte das Scannen
       setTimeout(() => {
-        console.log('Starte automatisches Scannen nach Timeout');
+        setStatusMessage('Starte automatisches Scannen...');
         setContinuousScanActive(true); // Setze den State auf aktiv
         startContinuousScan();         // Starte das Scannen explizit
-      }, 1500);
+      }, 2000);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
-      console.error('Kamera konnte nicht gestartet werden:', err);
       setError('Kamera konnte nicht gestartet werden: ' + errorMessage);
+      setStatusMessage('Fehler beim Starten der Kamera');
       setIsScanning(false);
     }
   };
@@ -70,6 +75,7 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
   // Stoppe die Kamera
   const stopCamera = () => {
     stopContinuousScan();
+    setStatusMessage('Kamera wird gestoppt...');
     
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -81,6 +87,7 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
     }
     
     setIsScanning(false);
+    setStatusMessage('Kamera gestoppt');
   };
 
   // Starte kontinuierliches Scannen
@@ -92,11 +99,11 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
     }
     
     setContinuousScanActive(true);
-    console.log('Kontinuierliches Scannen gestartet');
+    setScanAttempts(0);
+    setStatusMessage('Kontinuierliches Scannen gestartet');
     
     // Scanne alle 500ms nach QR-Codes
     scanIntervalRef.current = window.setInterval(() => {
-      console.log('Scan-Intervall ausgeführt');
       scanCurrentFrame();
     }, 500);
   };
@@ -110,24 +117,25 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       scanIntervalRef.current = null;
     }
     
-    console.log('Kontinuierliches Scannen gestoppt');
+    setStatusMessage('Kontinuierliches Scannen gestoppt');
   };
 
   // Scanne den aktuellen Frame nach QR-Codes
   const scanCurrentFrame = async () => {
     if (!videoRef.current || !isScanning) {
-      console.log('Scan übersprungen: Video nicht bereit oder Scannen nicht aktiv');
+      setStatusMessage('Scan übersprungen: Video nicht bereit');
       return;
     }
     
     // Überprüfe, ob das Video bereits Daten hat
     if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
-      console.log('Scan übersprungen: Video hat noch keine Dimensionen');
+      setStatusMessage('Scan übersprungen: Video hat noch keine Dimensionen');
       return;
     }
     
     try {
-      console.log('Scanne aktuellen Frame...');
+      setScanAttempts(prev => prev + 1);
+      
       // Canvas erstellen und Foto machen
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -151,17 +159,22 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
         stopContinuousScan();
         
         // Zeige Erfolgsmeldung
-        console.log('QR-Code gefunden:', result);
+        setStatusMessage('QR-Code gefunden: ' + result.substring(0, 20) + '...');
         setError('');
         
         // Rufe den Callback auf
         onScanComplete(result);
       } else {
-        console.log('Kein QR-Code im aktuellen Frame gefunden');
+        if (scanAttempts % 10 === 0) {
+          setStatusMessage(`Suche nach QR-Code... (${scanAttempts} Versuche)`);
+        }
       }
     } catch (err) {
       // Fehler beim Scannen, aber wir wollen nicht bei jedem Frame einen Fehler anzeigen
-      console.error('Fehler beim Scannen:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
+      if (scanAttempts % 20 === 0) {
+        setStatusMessage('Fehler beim Scannen: ' + errorMessage);
+      }
     }
   };
 
@@ -179,11 +192,11 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
   // Cleanup beim Unmount
   useEffect(() => {
     // Start camera automatically when component mounts
-    console.log('Camera-Komponente gemounted, starte Kamera...');
+    setStatusMessage('Camera-Komponente initialisiert, starte Kamera...');
     startCamera();
     
     return () => {
-      console.log('Camera-Komponente wird unmounted, stoppe Kamera...');
+      setStatusMessage('Camera-Komponente wird entfernt, stoppe Kamera...');
       stopCamera();
     };
   }, []);
@@ -200,6 +213,21 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       
       {error && <div className="error">{error}</div>}
       
+      <div className="status-message" style={{
+        position: 'absolute',
+        bottom: '10px',
+        left: '10px',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        padding: '5px 10px',
+        borderRadius: '4px',
+        fontSize: '12px',
+        zIndex: 1000,
+        maxWidth: '80%'
+      }}>
+        {statusMessage}
+      </div>
+      
       <div className="scanning-indicator" style={{
         display: continuousScanActive && isScanning ? 'block' : 'none',
         position: 'absolute',
@@ -214,7 +242,7 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
         zIndex: 1000,
         border: '2px solid green'
       }}>
-        QR-Code wird gesucht...
+        QR-Code wird gesucht... ({scanAttempts})
       </div>
       
       <div className="camera-controls">
