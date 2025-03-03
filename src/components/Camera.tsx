@@ -9,7 +9,7 @@ interface CameraProps {
 const Camera = ({ onScanComplete, onClose }: CameraProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
-  const [continuousScanActive, setContinuousScanActive] = useState(true);
+  const [continuousScanActive, setContinuousScanActive] = useState(false); // Starte inaktiv
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<number | null>(null);
@@ -53,10 +53,12 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       // Erfolgsmeldung
       console.log('Kamera erfolgreich gestartet');
       
-      // Warte kurz, bis die Kamera initialisiert ist
+      // Warte kurz, bis die Kamera initialisiert ist, dann starte das Scannen
       setTimeout(() => {
-        startContinuousScan();
-      }, 1000);
+        console.log('Starte automatisches Scannen nach Timeout');
+        setContinuousScanActive(true); // Setze den State auf aktiv
+        startContinuousScan();         // Starte das Scannen explizit
+      }, 1500);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       console.error('Kamera konnte nicht gestartet werden:', err);
@@ -94,6 +96,7 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
     
     // Scanne alle 500ms nach QR-Codes
     scanIntervalRef.current = window.setInterval(() => {
+      console.log('Scan-Intervall ausgeführt');
       scanCurrentFrame();
     }, 500);
   };
@@ -112,14 +115,19 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
 
   // Scanne den aktuellen Frame nach QR-Codes
   const scanCurrentFrame = async () => {
-    if (!videoRef.current || !isScanning) return;
+    if (!videoRef.current || !isScanning) {
+      console.log('Scan übersprungen: Video nicht bereit oder Scannen nicht aktiv');
+      return;
+    }
     
     // Überprüfe, ob das Video bereits Daten hat
     if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+      console.log('Scan übersprungen: Video hat noch keine Dimensionen');
       return;
     }
     
     try {
+      console.log('Scanne aktuellen Frame...');
       // Canvas erstellen und Foto machen
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -148,6 +156,8 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
         
         // Rufe den Callback auf
         onScanComplete(result);
+      } else {
+        console.log('Kein QR-Code im aktuellen Frame gefunden');
       }
     } catch (err) {
       // Fehler beim Scannen, aber wir wollen nicht bei jedem Frame einen Fehler anzeigen
@@ -169,9 +179,11 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
   // Cleanup beim Unmount
   useEffect(() => {
     // Start camera automatically when component mounts
+    console.log('Camera-Komponente gemounted, starte Kamera...');
     startCamera();
     
     return () => {
+      console.log('Camera-Komponente wird unmounted, stoppe Kamera...');
       stopCamera();
     };
   }, []);
