@@ -59,11 +59,11 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       setStatusMessage('Kamera erfolgreich gestartet, bereite Scannen vor...');
       
       // Warte kurz, bis die Kamera initialisiert ist, dann starte das Scannen
-      setTimeout(() => {
-        setStatusMessage('Starte automatisches Scannen...');
-        setContinuousScanActive(true); // Setze den State auf aktiv
-        startContinuousScan();         // Starte das Scannen explizit
-      }, 2000);
+      videoRef.current.addEventListener('loadedmetadata', () => {
+        setStatusMessage('Video ist bereit, starte Scannen...');
+        setContinuousScanActive(true);
+        startContinuousScan();
+      }, { once: true });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
       setError('Kamera konnte nicht gestartet werden: ' + errorMessage);
@@ -198,6 +198,12 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
     return () => {
       setStatusMessage('Camera-Komponente wird entfernt, stoppe Kamera...');
       stopCamera();
+      if (videoRef.current) {
+        videoRef.current.removeEventListener('loadedmetadata', startContinuousScan);
+      }
+      if (videoRef.current) {
+        videoRef.current.removeEventListener('loadedmetadata', startContinuousScan);
+      }
     };
   }, []);
 
