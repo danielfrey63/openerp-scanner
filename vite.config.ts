@@ -29,5 +29,8 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills()
-  ]
+  ],
+  build: {
+    chunkSizeWarningLimit: 1000,
+  }
 })
