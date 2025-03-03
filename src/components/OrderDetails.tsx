@@ -75,7 +75,11 @@ const OrderDetails: React.FC = () => {
 
   const handleScanComplete = (data: string) => {
     console.log('QR Code gescannt:', data);
-    // Hier können Sie später weitere Aktionen mit dem gescannten Code durchführen
+    
+    // Zeige ein einfaches Alert mit den gescannten Daten
+    alert(`QR-Code erkannt: ${data}`);
+    
+    // Schließe die Kamera
     setShowCamera(false);
   };
 

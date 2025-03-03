@@ -96,9 +96,14 @@ const Camera = ({ onScanComplete, onClose }: CameraProps) => {
       const result = await qrCodeScanner.scanFromImageUrl(imageUrl);
       
       if (result) {
+        // Rufe den Callback auf
         onScanComplete(result);
-        stopCamera();
-        if (onClose) onClose();
+        
+        // Stoppe die Kamera (optional, je nach Anforderung)
+        // stopCamera();
+        
+        // Schließe die Kamera-Komponente (optional, je nach Anforderung)
+        // if (onClose) onClose();
       } else {
         setError('Kein QR-Code im Bild gefunden');
       }
