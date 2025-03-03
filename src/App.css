@@ -194,9 +194,19 @@ button:not(.default):hover {
   height: 24px;
 }
 
-/* Direct rule for back button with !important to override any other styles */
-button.icon-button.secondary img[src*="back-icon"] {
-  filter: brightness(0) invert(1) !important;
+/* Disabled button styles */
+button:disabled,
+button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+  box-shadow: none;
+}
+
+button:disabled:hover,
+button.disabled:hover {
+  transform: none !important;
+  background-color: inherit;
 }
 
 /* SVG color filters for different button types */
@@ -205,7 +215,7 @@ button.icon-button.secondary img,
 button.icon-button:not(.default) img,
 button.icon-button.secondary svg,
 button.icon-button:not(.default) svg {
-  filter: brightness(0) invert(1) !important; /* Makes black icons white with higher priority */
+  filter: brightness(0) invert(1);
 }
 
 /* Form button (login) */

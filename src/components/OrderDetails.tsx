@@ -89,48 +89,65 @@ const OrderDetails: React.FC = () => {
         <div className="action-buttons">
           <button 
             onClick={() => navigate('/orders')} 
-            className="icon-button secondary" 
+            className={`icon-button ${selectedLine === null ? 'default' : 'secondary'}`}
             title="Back to Orders"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                navigate('/orders');
+              }
+            }}
+            tabIndex={0}
           >
             <img src={BackIcon} alt="Back" />
           </button>
           <button 
             onClick={() => {
-              // Direkt einen Datei-Input erstellen und klicken
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = 'image/*';
-              input.onchange = async (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0];
-                if (!file) return;
-                
-                try {
-                  // QR-Code aus dem Bild lesen
-                  const result = await qrCodeScanner.scanFromFile(file);
+              if (selectedLine !== null) {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = async (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (!file) return;
                   
-                  if (result) {
-                    handleScanComplete(result);
-                  } else {
-                    console.error('Kein QR-Code im Bild gefunden');
+                  try {
+                    const result = await qrCodeScanner.scanFromFile(file);
+                    
+                    if (result) {
+                      handleScanComplete(result);
+                    } else {
+                      console.error('Kein QR-Code im Bild gefunden');
+                    }
+                  } catch (err) {
+                    console.error('QR-Code Scan Fehler:', err);
                   }
-                } catch (err) {
-                  console.error('QR-Code Scan Fehler:', err);
-                }
-              };
-              input.click();
+                };
+                input.click();
+              }
             }} 
-            className="icon-button" 
-            title="Upload Image"
+            className={`icon-button ${selectedLine === null ? 'disabled' : ''}`}
+            disabled={selectedLine === null}
+            title={selectedLine === null ? "Bitte zuerst ein Produkt auswählen" : "Upload Image"}
+            tabIndex={selectedLine === null ? -1 : 0}
           >
             <img src={UploadIcon} alt="Upload" />
           </button>
           {hasCamera && (
             <button 
               onClick={() => {
-                setShowCamera(true);
+                if (selectedLine !== null) {
+                  setShowCamera(true);
+                }
               }} 
-              className="icon-button default" 
-              title="Take Photo"
+              className={`icon-button ${selectedLine === null ? 'disabled' : 'default'}`}
+              disabled={selectedLine === null}
+              title={selectedLine === null ? "Bitte zuerst ein Produkt auswählen" : "Take Photo"}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && selectedLine !== null) {
+                  setShowCamera(true);
+                }
+              }}
+              tabIndex={selectedLine === null ? -1 : 0}
             >
               <img src={CameraIcon} alt="Camera" />
             </button>
@@ -149,7 +166,6 @@ const OrderDetails: React.FC = () => {
         {orderLines
           .filter(line => line.product_id[1].includes('Champagne'))
           .map((line, index) => {
-            // Extrahiere den Produktcode aus den eckigen Klammern (ohne die Klammern selbst)
             const productCodeMatch = line.product_id[1].match(/\[(.*?)\]/);
             const productCode = productCodeMatch ? productCodeMatch[1] : '';
             
@@ -157,7 +173,7 @@ const OrderDetails: React.FC = () => {
               <div
                 key={line.id}
                 className={`item ${selectedLine === index ? 'selected' : ''}`}
-                onClick={() => setSelectedLine(index)}
+                onClick={() => {setSelectedLine(selectedLine === index ? null : index);}}
               >
                 {line.product_uom_qty}x {productCode}
               </div>
