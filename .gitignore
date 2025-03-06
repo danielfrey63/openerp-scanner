@@ -8,6 +8,7 @@ dist/
 build/
 lib/
 out/
+temp/
 *.tsbuildinfo
 
 # Environment and config
@@ -41,3 +42,4 @@ coverage/
 # Temporary files
 tmp/
 temp/
+temp.*
