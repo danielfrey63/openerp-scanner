@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useOpenERP } from '@/context/OpenERPContext';
+import { useOpenERP } from '@/context/OpenERPContext.js';
 import { OrderLine as ClientOrderLine } from '@danielfrey63/openerp-ts-client';
 import BackIcon from '@/icons/back-icon.svg';
 import Logo from '@/icons/logo.svg';
 import UploadIcon from '@/icons/upload-icon.svg';
 import CameraIcon from '@/icons/camera-icon.svg';
-import Camera from './Camera';
-import { qrCodeScanner } from './QRCodeScanner';
+import Camera from '@/components/Camera.js';
+import { qrCodeScanner } from '@/components/QRCodeScanner.js';
 
 interface OrderLine extends ClientOrderLine {
   id: number;

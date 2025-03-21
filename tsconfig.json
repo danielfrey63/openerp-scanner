@@ -5,9 +5,9 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
+    "module": "Node16",
     "skipLibCheck": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "Node16",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
@@ -19,8 +19,9 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["src", "../client/src/index.ts"],
+  "include": ["src", "test", "test/vitest.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

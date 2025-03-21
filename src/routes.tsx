@@ -1,9 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
-import App from './App';
-import Login from './components/Login';
-import OrderList from './components/OrderList';
-import OrderDetails from './components/OrderDetails';
-import ProtectedRoute from './components/ProtectedRoute';
+import App from '@/App.js';
+import Login from '@/components/Login.js';
+import OrderList from '@/components/OrderList.js';
+import OrderDetails from '@/components/OrderDetails.js';
+import ProtectedRoute from '@/components/ProtectedRoute.js';
 
 export const router = createBrowserRouter([
   {

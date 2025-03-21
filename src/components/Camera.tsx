@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { qrCodeScanner } from './QRCodeScanner';
+import { qrCodeScanner } from '@/components/QRCodeScanner.js';
 
 interface CameraProps {
   onScanComplete: (data: string) => void;

@@ -1,5 +1,5 @@
 import { ChangeEvent, useState, useRef, useEffect } from 'react';
-import { qrCodeScanner } from './QRCodeScanner';
+import { qrCodeScanner } from '@/components/QRCodeScanner.js';
 
 interface FileUploadProps {
   onScanComplete: (data: string) => void;
