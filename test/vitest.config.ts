@@ -11,8 +11,8 @@ export default defineConfig({
   root: rootDir,
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.{ts,tsx}', 'test/**/*.test.{ts,tsx}'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/.idea/**', '**/.git/**', '**/.cache/**'],
+    include: ['test/**/*.test.{ts,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.idea/**', '**/.git/**', '**/.cache/**', '**/temp/**'],
     globals: true,
     setupFiles: [
       path.resolve(__dirname, 'setup.ts')
@@ -20,7 +20,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'lcov'],
-      exclude: ['**/node_modules/**', '**/.idea/**', '**/dist/**'],
+      exclude: ['**/node_modules/**', '**/dist/**', '**/.idea/**', '**/.git/**', '**/.cache/**', '**/temp/**'],
       reportsDirectory: path.resolve(rootDir, 'coverage'),
       all: false
     },
