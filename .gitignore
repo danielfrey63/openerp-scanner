@@ -14,7 +14,6 @@ temp/
 # Environment and config
 .env
 .env.local
-.env.*
 
 # IDE and editor files
 .vscode/
