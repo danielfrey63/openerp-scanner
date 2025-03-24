@@ -24,6 +24,17 @@ export default defineConfig({
       reportsDirectory: path.resolve(rootDir, 'coverage'),
       all: false
     },
+    reporters: [
+      ['default', {
+        summary: false
+      }]
+    ],
+    outputFile: {
+      json: './test-results.json'
+    },
+    silent: true,
+    watch: false,
+    logHeapUsage: false
   },
   resolve: {
     alias: {

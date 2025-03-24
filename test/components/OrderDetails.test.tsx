@@ -40,6 +40,9 @@ vi.mock('@/components/QRCodeScanner.js', () => ({
   }
 }));
 
+// Mock console.log globally before any tests run
+vi.spyOn(console, 'log').mockImplementation(() => {});
+
 // Create mocks
 const mockNavigate = vi.fn();
 const mockOpenERPClient = {
@@ -58,8 +61,8 @@ const mockCamera = {
   onPhoto: null as ((data: string) => void) | null
 };
 
-// Original createElement function
-const originalCreateElement = document.createElement;
+// Store the original createElement function
+const originalCreateElement = document.createElement.bind(document);
 
 // Setup before each test
 beforeEach(() => {
@@ -79,12 +82,12 @@ beforeEach(() => {
   qrCodeScanner.scanFromFile = vi.fn();
   
   // Mock document.createElement for file input
-  document.createElement = vi.fn((tag) => {
+  document.createElement = vi.fn().mockImplementation((tag) => {
     if (tag === 'input') {
       return mockFileInput;
     }
-    // For other elements, create a real DOM element
-    return originalCreateElement.call(document, tag);
+    // For other elements, use the original implementation
+    return originalCreateElement(tag);
   });
   
   // Mock order lines data
@@ -112,6 +115,12 @@ beforeEach(() => {
 
   // Mock window.alert
   vi.spyOn(window, 'alert').mockImplementation(() => {});
+  
+  // Mock console.error
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  
+  // Ensure console.log is mocked for each test
+  vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
 // Restore original createElement after tests
