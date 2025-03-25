@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run -c test/vitest.config.ts && npm run cleanup:vitest:silent",
     "test:ui": "vitest ui -c test/vitest.config.ts",
-    "coverage": "vitest run --coverage -c test/vitest.config.ts && npm run cleanup:vitest:silent",
+    "coverage": "vitest run --coverage -c test/vitest.config.ts --reporter verbose && npm run cleanup:vitest:silent",
     "coverage:clean": "vitest run --coverage -c test/vitest.config.ts && npm run cleanup:vitest:silent",
     "cleanup:vitest": "node -e \"const fs = require('fs'); const path = require('path'); const testDir = path.join(__dirname, 'test'); fs.readdirSync(testDir).filter(f => f.includes('timestamp-') && f.endsWith('.mjs')).forEach(f => fs.unlinkSync(path.join(testDir, f)));\"",
     "cleanup:vitest:silent": "node -e \"const fs = require('fs'); const path = require('path'); const testDir = path.join(__dirname, 'test'); fs.readdirSync(testDir).filter(f => f.includes('timestamp-') && f.endsWith('.mjs')).forEach(f => fs.unlinkSync(path.join(testDir, f)));\" > nul 2>&1",
