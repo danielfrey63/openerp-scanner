@@ -20,23 +20,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'lcov'],
-      exclude: [
-        '**/node_modules/**', 
-        '**/dist/**', 
-        '**/.idea/**', 
-        '**/.git/**', 
-        '**/.cache/**', 
-        '**/temp/**',
-        '**/setup.ts',
-        '**/*.config.ts',
-        '**/src/App.tsx',
-        '**/src/env.d.ts',
-        '**/src/main.tsx',
-        '**/src/routes.tsx',
-        '**/src/types.d.ts',
-        '**/src/context/OpenERPContext.tsx',
-        '**/src/types/components.d.ts'
-      ],
+      exclude: ['**/node_modules/**', '**/dist/**', '**/.idea/**', '**/.git/**', '**/.cache/**', '**/temp/**'],
       include: [
         'src/components/OrderDetails.tsx',
         'test/components/OrderDetails/**/*.test.{ts,tsx}'
