@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOpenERP } from '@/context/OpenERPContext';
+import { useOpenERP } from '@/context/OpenERPContext.js';
 import BackIcon from '@/icons/back-icon.svg';
 import RefreshIcon from '@/icons/refresh-icon.svg';
 import Logo from '@/icons/logo.svg';

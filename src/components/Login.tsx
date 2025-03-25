@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OpenERPClient, OpenERPConfig } from '@danielfrey63/openerp-ts-client';
-import { useOpenERP } from "@/context/OpenERPContext";
+import { useOpenERP } from "@/context/OpenERPContext.js";
 import LoginIcon from "@/icons/login-icon.svg";
 import Logo from "@/icons/logo.svg";
 
