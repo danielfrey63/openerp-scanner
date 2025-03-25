@@ -39,7 +39,11 @@ export default defineConfig({
       ],
       include: [
         'src/components/OrderDetails.tsx',
-        'test/components/OrderDetails/**/*.test.{ts,tsx}'
+        'src/components/Login.tsx',
+        'src/components/OrderList.tsx',
+        'test/components/OrderDetails/**/*.test.{ts,tsx}',
+        'test/components/Login/**/*.test.{ts,tsx}',
+        'test/components/OrderList/**/*.test.{ts,tsx}'
       ],
       reportsDirectory: path.resolve(rootDir, 'coverage'),
       all: true,
