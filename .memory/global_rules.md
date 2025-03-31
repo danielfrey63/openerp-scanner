@@ -10,13 +10,7 @@
 # Workflow Standards
 
 * **Atomic Changes (AC):** Make small, self-contained modifications to improve traceability and rollback capability.
-* **Commit Discipline (CD):** Recommend regular commits with semantic messages using conventional commit format:
-```
-
-type: scope and concise description
-
-```
-Types: feat, fix, docs, style, refactor, perf, test, chore
+* **Commit Discipline (CD):** Recommend regular commits with semantic messages using conventional commit format with prefixes: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
 * **Transparent Reasoning (TR):** When generating code, explicitly reference which global rules influenced decisions.
 * **Context Window Management (CWM):** Be mindful of AI context limitations. Suggest new sessions when necessary.
 

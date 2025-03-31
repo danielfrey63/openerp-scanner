@@ -16,7 +16,7 @@
 
 ## 2.2. Development Tools
 
-- **Build Tool:** Vit
+- **Build Tool:** Vite
 - **Package Manager:** npm
 - **Testing Framework:** Vitest
 - **Code Formatting:** Prettier
