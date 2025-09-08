@@ -1,277 +1,188 @@
-import { useState, useEffect, useRef } from 'react';
-import { qrCodeScanner } from '@/components/QRCodeScanner.js';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { ScannerService, ScannerOptions, CameraManager } from 'qr-scanner-library';
+import startIconUrl from '@/icons/start.svg';
+import stopIconUrl from '@/icons/stop.svg';
 
 interface CameraProps {
   onScanComplete: (data: string) => void;
-  onClose?: () => void;
 }
 
-const Camera = ({ onScanComplete, onClose }: CameraProps) => {
+
+const Camera = ({ onScanComplete }: CameraProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
-  const [continuousScanActive, setContinuousScanActive] = useState(false); // Starte inaktiv
-  const [statusMessage, setStatusMessage] = useState('Kamera wird initialisiert...');
-  const [scanAttempts, setScanAttempts] = useState(0);
+  // Removed verbose status UI; keep logic minimal
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
+  const [isLoadingCameras, setIsLoadingCameras] = useState<boolean>(true);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<number | null>(null);
+  const scannerServiceRef = useRef<ScannerService | null>(null);
+  const hasAutoStartedRef = useRef<boolean>(false);
 
-  // Starte die Kamera
-  const startCamera = async () => {
-    if (!videoRef.current) return;
-    
-    setIsScanning(true);
+  const handleScanSuccess = useCallback((result: string) => {
     setError('');
-    setStatusMessage('Kamera wird gestartet...');
+    if (scannerServiceRef.current) {
+      scannerServiceRef.current.stop();
+      scannerServiceRef.current = null;
+    }
+    setIsScanning(false);
+    onScanComplete(result);
+  }, [onScanComplete]);
+
+  const handleError = useCallback((err: Error) => {
+    setError(err.message || 'Unbekannter Fehler beim Scannen');
+    setIsScanning(false);
+  }, []);
+
+  const startScanner = useCallback(async (deviceIdOverride?: string) => {
+    if (!videoRef.current) {
+      setError('Video-Element ist nicht verfügbar.');
+      return;
+    }
+    if (isScanning) return;
+
+    let deviceIdToUse = deviceIdOverride ?? selectedDeviceId;
+    if (!deviceIdToUse && devices.length > 0) {
+      deviceIdToUse = devices[0].deviceId;
+    }
+
+    setError('');
+    setIsScanning(true);
+
+    if (scannerServiceRef.current) {
+      scannerServiceRef.current.stop();
+      scannerServiceRef.current = null;
+    }
+
+    const options: ScannerOptions = {
+      videoElement: videoRef.current,
+      deviceId: deviceIdToUse,
+      onScanSuccess: handleScanSuccess,
+      onError: handleError,
+      stopOnScan: true
+    };
 
     try {
-      // Versuche verschiedene Kamera-Konfigurationen
-      let stream: MediaStream | null = null;
-      
-      // Versuche zuerst die Rückkamera (für Mobilgeräte)
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        });
-        setStatusMessage('Rückkamera aktiviert');
-      } catch (e) {
-        setStatusMessage('Rückkamera nicht verfügbar, versuche andere Kamera');
-      }
-      
-      // Wenn das nicht funktioniert, versuche irgendeine Kamera
-      if (!stream) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: true
-          });
-          setStatusMessage('Frontkamera aktiviert');
-        } catch (e) {
-          throw new Error('Keine Kamera verfügbar');
-        }
-      }
-      
-      // Stream speichern und Video-Element damit verbinden
-      streamRef.current = stream;
-      videoRef.current.srcObject = stream;
-      videoRef.current.play();
-      
-      // Erfolgsmeldung
-      setStatusMessage('Kamera erfolgreich gestartet, bereite Scannen vor...');
-      
-      // Warte kurz, bis die Kamera initialisiert ist, dann starte das Scannen
-      videoRef.current.addEventListener('loadedmetadata', () => {
-        setStatusMessage('Video ist bereit, starte Scannen...');
-        setContinuousScanActive(true);
-        startContinuousScan();
-      }, { once: true });
+      scannerServiceRef.current = new ScannerService(options);
+      await scannerServiceRef.current.start();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
-      setError('Kamera konnte nicht gestartet werden: ' + errorMessage);
-      setStatusMessage('Fehler beim Starten der Kamera');
+      handleError(err as Error);
       setIsScanning(false);
     }
-  };
+  }, [devices, handleError, handleScanSuccess, isScanning, selectedDeviceId]);
 
-  // Stoppe die Kamera
-  const stopCamera = () => {
-    stopContinuousScan();
-    setStatusMessage('Kamera wird gestoppt...');
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+  const stopScanner = useCallback(() => {
+    if (scannerServiceRef.current) {
+      scannerServiceRef.current.stop();
+      scannerServiceRef.current = null;
     }
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    
     setIsScanning(false);
-    setStatusMessage('Kamera gestoppt');
-  };
+  }, []);
 
-  // Starte kontinuierliches Scannen
-  const startContinuousScan = () => {
-    // Stoppe vorherige Scan-Intervalle
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    
-    setContinuousScanActive(true);
-    setScanAttempts(0);
-    setStatusMessage('Kontinuierliches Scannen gestartet');
-    
-    // Scanne alle 500ms nach QR-Codes
-    scanIntervalRef.current = window.setInterval(() => {
-      scanCurrentFrame();
-    }, 500);
-  };
-
-  // Stoppe kontinuierliches Scannen
-  const stopContinuousScan = () => {
-    setContinuousScanActive(false);
-    
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    
-    setStatusMessage('Kontinuierliches Scannen gestoppt');
-  };
-
-  // Scanne den aktuellen Frame nach QR-Codes
-  const scanCurrentFrame = async () => {
-    if (!videoRef.current || !isScanning) {
-      setStatusMessage('Scan übersprungen: Video nicht bereit');
-      return;
-    }
-    
-    // Überprüfe, ob das Video bereits Daten hat
-    if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
-      setStatusMessage('Scan übersprungen: Video hat noch keine Dimensionen');
-      return;
-    }
-    
-    try {
-      setScanAttempts(prev => prev + 1);
-      
-      // Canvas erstellen und Foto machen
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Canvas-Kontext konnte nicht erstellt werden');
-      
-      // Canvas-Größe auf Video-Größe setzen
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      
-      // Video-Frame auf Canvas zeichnen
-      context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      
-      // Als Bild exportieren
-      const imageUrl = canvas.toDataURL('image/png');
-      
-      // QR-Code scannen
-      const result = await qrCodeScanner.scanFromImageUrl(imageUrl);
-      
-      if (result) {
-        // Stoppe das kontinuierliche Scannen
-        stopContinuousScan();
-        
-        // Zeige Erfolgsmeldung
-        setStatusMessage('QR-Code gefunden: ' + result.substring(0, 20) + '...');
-        setError('');
-        
-        // Rufe den Callback auf
-        onScanComplete(result);
-      } else {
-        if (scanAttempts % 10 === 0) {
-          setStatusMessage(`Suche nach QR-Code... (${scanAttempts} Versuche)`);
-        }
-      }
-    } catch (err) {
-      // Fehler beim Scannen, aber wir wollen nicht bei jedem Frame einen Fehler anzeigen
-      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler';
-      if (scanAttempts % 20 === 0) {
-        setStatusMessage('Fehler beim Scannen: ' + errorMessage);
-      }
-    }
-  };
-
-  // Toggle kontinuierliches Scannen
-  const toggleContinuousScan = () => {
-    if (continuousScanActive) {
-      stopContinuousScan();
-      setError('Kontinuierliches Scannen pausiert');
-    } else {
-      setError('');
-      startContinuousScan();
-    }
-  };
-
-  // Cleanup beim Unmount
   useEffect(() => {
-    // Start camera automatically when component mounts
-    setStatusMessage('Camera-Komponente initialisiert, starte Kamera...');
-    startCamera();
-    
-    return () => {
-      setStatusMessage('Camera-Komponente wird entfernt, stoppe Kamera...');
-      stopCamera();
-      if (videoRef.current) {
-        videoRef.current.removeEventListener('loadedmetadata', startContinuousScan);
+    let cancelled = false;
+    const primeAndList = async () => {
+      try {
+        if (navigator.mediaDevices?.getUserMedia) {
+          const tmp = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          tmp.getTracks().forEach(t => t.stop());
+        }
+      } catch {
+        // Ignoriere Permission-Fehler beim Priming
       }
-      if (videoRef.current) {
-        videoRef.current.removeEventListener('loadedmetadata', startContinuousScan);
+      setIsLoadingCameras(true);
+      try {
+        if (!('mediaDevices' in navigator) || typeof navigator.mediaDevices.enumerateDevices !== 'function') {
+          if (cancelled) return;
+          setDevices([]);
+          setSelectedDeviceId('');
+          setError('');
+          return;
+        }
+        const videoDevices = await CameraManager.listDevices();
+        if (cancelled) return;
+        setDevices(videoDevices);
+        setSelectedDeviceId(videoDevices[0]?.deviceId ?? '');
+        setError('');
+      } catch (err) {
+        if (cancelled) return;
+        setDevices([]);
+        setSelectedDeviceId('');
+        setError('');
+      } finally {
+        if (!cancelled) setIsLoadingCameras(false);
+      }
+    };
+
+    primeAndList();
+    return () => {
+      cancelled = true;
+      if (scannerServiceRef.current) {
+        scannerServiceRef.current.stop();
+        scannerServiceRef.current = null;
       }
     };
   }, []);
 
+  useEffect(() => {
+    if (!isLoadingCameras && devices.length > 0 && !isScanning && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
+      void startScanner(selectedDeviceId || devices[0].deviceId);
+    }
+  }, [isLoadingCameras, devices, isScanning, selectedDeviceId, startScanner]);
+
   return (
     <div className="camera-container">
-      <video 
-        ref={videoRef} 
+      <div className="controls-row">
+        <select
+          id="camera-select"
+          value={selectedDeviceId}
+          onChange={(e) => {
+            const id = e.target.value;
+            setSelectedDeviceId(id);
+            if (isScanning) {
+              stopScanner();
+            }
+            void startScanner(id);
+          }}
+          disabled={isLoadingCameras || devices.length === 0}
+          aria-label="Kamera auswählen"
+          className="camera-select"
+        >
+          {isLoadingCameras && <option>Kameras werden geladen...</option>}
+          {!isLoadingCameras && devices.length === 0 && <option>Keine Kameras gefunden</option>}
+          {devices.map(d => (
+            <option key={d.deviceId} value={d.deviceId}>{d.label || 'Kamera'}</option>
+          ))}
+        </select>
+        <div className="action-buttons">
+          <button
+            onClick={() => isScanning ? stopScanner() : void startScanner()}
+            className={`icon-button ${isScanning ? 'default' : 'secondary'}`}
+            aria-label={isScanning ? 'Scan stoppen' : 'Scan starten'}
+            title={isScanning ? 'Scan stoppen' : 'Scan starten'}
+            disabled={isLoadingCameras}
+          >
+            {isScanning ? (
+              <img src={stopIconUrl} width={24} height={24} alt="Stop" />
+            ) : (
+              <img src={startIconUrl} width={24} height={24} alt="Start" />
+            )}
+          </button>
+          {/* Single CTA only, as in qr-scanner-client */}
+        </div>
+      </div>
+
+      <video
+        ref={videoRef}
         className="camera-video"
         style={{ width: '100%', borderRadius: '8px' }}
         playsInline
         muted
+        autoPlay
       />
-      
+
       {error && <div className="error">{error}</div>}
-      
-      <div className="status-message" style={{
-        position: 'absolute',
-        bottom: '10px',
-        left: '10px',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        color: 'white',
-        padding: '5px 10px',
-        borderRadius: '4px',
-        fontSize: '12px',
-        zIndex: 1000,
-        maxWidth: '80%'
-      }}>
-        {statusMessage}
-      </div>
-      
-      <div className="scanning-indicator" style={{
-        display: continuousScanActive && isScanning ? 'block' : 'none',
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        backgroundColor: 'rgba(0, 255, 0, 0.8)',
-        color: 'black',
-        padding: '5px 10px',
-        borderRadius: '4px',
-        fontSize: '14px',
-        fontWeight: 'bold',
-        zIndex: 1000,
-        border: '2px solid green'
-      }}>
-        QR-Code wird gesucht... ({scanAttempts})
-      </div>
-      
-      <div className="camera-controls">
-        {isScanning && (
-          <>
-            <button onClick={toggleContinuousScan} className={continuousScanActive ? "secondary" : "default"}>
-              {continuousScanActive ? "Scannen pausieren" : "Scannen starten"}
-            </button>
-            <button onClick={stopCamera} className="secondary">
-              Kamera stoppen
-            </button>
-          </>
-        )}
-        
-        {onClose && (
-          <button onClick={() => {
-            stopCamera();
-            if (onClose) onClose();
-          }} className="secondary">
-            Schließen
-          </button>
-        )}
-      </div>
     </div>
   );
 };

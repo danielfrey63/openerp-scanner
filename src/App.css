@@ -162,9 +162,15 @@ button {
 
 /* Default button style */
 button.default {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   background-color: #e0e0e0;
   color: #121212;
   transition: background-color 0.2s, transform 0.2s;
+  border: 1px solid #cfcfcf;
 }
 
 button.default:hover {
@@ -188,15 +194,17 @@ button:not(.default):hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 8px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
   margin: 0;
+  line-height: 0;
+  box-sizing: border-box;
 }
 
 .icon-button img,
 .icon-button svg {
-  width: 24px;
+  width: 24px; /* unify with client */
   height: 24px;
 }
 
@@ -214,6 +222,59 @@ button.disabled:hover {
   transform: none !important;
 }
 
+/* Ensure white icons on dark buttons */
+button.icon-button:not(.default) img,
+button.icon-button:not(.default) svg {
+  filter: brightness(0) invert(1);
+}
+
+/* Controls row for camera select + CTA */
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 12px;
+  row-gap: 8px;
+  margin: 10px auto;
+  flex-wrap: wrap;
+}
+
+.controls-row > * {
+  vertical-align: middle;
+}
+
+/* Larger camera select, similar to client */
+.camera-select {
+  font-size: 18px;
+  padding: 10px 14px; /* a bit wider like client */
+  border-radius: 8px;
+  height: 44px; /* align with CTA height */
+  line-height: 24px;
+  background-color: #e0e0e0; /* light like client */
+  color: #121212; /* dark text */
+  border: none;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23121212' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 36px; /* room for chevron */
+  box-sizing: border-box;
+}
+
+.camera-select:hover {
+  background-color: hsl(0, 0%, 80%);
+}
+
+@media (max-width: 600px) {
+  .camera-select {
+    font-size: 20px;
+  }
+}
+
 /* SVG color filters for different button types */
 button.secondary img,
 button.icon-button.secondary img,
@@ -221,6 +282,12 @@ button.icon-button:not(.default) img,
 button.icon-button.secondary svg,
 button.icon-button:not(.default) svg {
   filter: brightness(0) invert(1);
+}
+
+/* Tighten icon vertical alignment inside CTAs */
+.icon-button svg,
+.icon-button img {
+  display: block;
 }
 
 /* Form button (login) */
@@ -231,9 +298,8 @@ form .icon-button {
 
 /* Scanner section button */
 .scanner-section button {
-  padding: 12px 20px;
+  padding: 9px 9px;
   font-size: 16px;
-  margin-top: 15px;
   display: block;
 }
 
@@ -257,7 +323,13 @@ form .icon-button {
 .scanner-container video {
   width: 100%;
   border-radius: 8px;
-  border: 1px solid #333;
+  border: 2px dashed #888; /* match visual from client */
+}
+
+/* Also apply dashed border for camera component video */
+.camera-video {
+  border: 2px dashed #888 !important;
+  border-radius: 8px;
 }
 
 /* File Upload Styles */

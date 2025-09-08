@@ -1,5 +1,4 @@
 import { ChangeEvent, useState, useRef, useEffect } from 'react';
-import { qrCodeScanner } from '@/components/QRCodeScanner.js';
 
 interface FileUploadProps {
   onScanComplete: (data: string) => void;
@@ -18,14 +17,8 @@ const FileUpload = ({ onScanComplete }: FileUploadProps) => {
     setError('');
 
     try {
-      // QR-Code aus dem Bild lesen
-      const result = await qrCodeScanner.scanFromFile(file);
-      
-      if (result) {
-        onScanComplete(result);
-      } else {
-        setError('Kein QR-Code im Bild gefunden');
-      }
+      // Upload-basiertes Scannen ist veraltet. Bitte Kamera verwenden.
+      setError('Upload-Scanning ist nicht mehr verfügbar. Bitte verwenden Sie die Kamera.');
     } catch (err) {
       console.error('QR-Code Scan Fehler:', err);
       setError('Fehler beim Scannen des QR-Codes');

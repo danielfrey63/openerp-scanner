@@ -15,15 +15,12 @@
   },
   "dependencies": {
     "@danielfrey63/openerp-ts-client": "^1.0.12",
-    "@yudiel/react-qr-scanner": "^2.2.1",
-    "@zxing/browser": "^0.1.4",
-    "@zxing/library": "^0.21.0",
     "axios": "^1.4.0",
     "buffer": "^6.0.3",
     "cookie": "^1.0.2",
     "dotenv": "^16.3.1",
     "events": "^3.3.0",
-    "qr-scanner": "^1.4.2",
+    "qr-scanner-library": "file:../qr-scanner-library",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.2.0",
@@ -33,6 +30,7 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^2.0.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@types/node": "^20.4.5",
