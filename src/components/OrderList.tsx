@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOpenERP } from '@/context/OpenERPContext.js';
+import { getOrderStatus } from '@/utils/sessionStore.js';
 import BackIcon from '@/icons/back-icon.svg';
 import RefreshIcon from '@/icons/refresh-icon.svg';
 import Logo from '@/icons/logo.svg';
@@ -20,9 +21,8 @@ const OrderList: React.FC = () => {
   React.useEffect(() => {
     const fetchOrders = async () => {
       try {
-        if (!client || !isAuthenticated) {
-          throw new Error('Not authenticated');
-        }
+        // Wait until client is available (grace may set it shortly after mount)
+        if (!client) return;
         
         try {
           const orders = await client.getOpenSaleOrders();
@@ -41,11 +41,6 @@ const OrderList: React.FC = () => {
       } catch (err) {
         console.error('Authentication Error:', err);
         setError('Authentication error: ' + (err instanceof Error ? err.message : String(err)));
-        
-        // If not authenticated, redirect to login
-        if (err instanceof Error && err.message === 'Not authenticated') {
-          navigate('/');
-        }
       }
     };
 
@@ -77,9 +72,7 @@ const OrderList: React.FC = () => {
               setError('');
               const fetchOrders = async () => {
                 try {
-                  if (!client || !isAuthenticated) {
-                    throw new Error('Not authenticated');
-                  }
+                  if (!client) return;
                   
                   try {
                     const orders = await client.getOpenSaleOrders();
@@ -98,11 +91,6 @@ const OrderList: React.FC = () => {
                 } catch (err) {
                   console.error('Authentication Error:', err);
                   setError('Authentication error: ' + (err instanceof Error ? err.message : String(err)));
-                  
-                  // If not authenticated, redirect to login
-                  if (err instanceof Error && err.message === 'Not authenticated') {
-                    navigate('/');
-                  }
                 }
               };
               fetchOrders();
@@ -115,15 +103,21 @@ const OrderList: React.FC = () => {
         </div>
       </div>
       {error && <div className="error">{error}</div>}
-      {orders.map(order => (
-        <div
-          key={order.id}
-          className="item"
-          onClick={() => handleOrderClick(order.id)}
-        >
-          {order.name} - {order.partner_id[1]}
-        </div>
-      ))}
+      {orders.map(order => {
+        const status = getOrderStatus(order.id);
+        const cls = status === 'full' ? 'status-full' : status === 'partial' ? 'status-partial' : '';
+        const title = status === 'full' ? 'Vollständig (Session)' : status === 'partial' ? 'Teilweise (Session)' : 'Offen';
+        return (
+          <div
+            key={order.id}
+            className={`item ${cls}`}
+            title={title}
+            onClick={() => handleOrderClick(order.id)}
+          >
+            {order.name} - {order.partner_id[1]}
+          </div>
+        );
+      })}
     </div>
   );
 };

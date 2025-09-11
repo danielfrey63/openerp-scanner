@@ -41,7 +41,7 @@
 .item select,
 .item input {
   width: 100%;
-  padding: 8px;
+  padding: 0px;
   background-color: transparent;
   border: none;
   font-size: 16px;
@@ -50,6 +50,14 @@
 
 .item input {
   color: #e0e0e0;
+}
+
+/* Remove focus border/outline on login inputs/selects */
+.list form .item input:focus-visible,
+.list form .item select:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 .item select {
   -webkit-appearance: none;
@@ -84,13 +92,14 @@ h2 {
 }
 
 /* List items */
+
 .item {
   padding: 8px;
   border: 2px solid #333;
-  margin-bottom: 3px;
-  margin-top: 10px;
+  margin-bottom: 5px;
+  margin-top: 5px;
   border-radius: 8px;
-  cursor: pointer;
+  cursor: default;
   transition: background-color 0.2s;
   width: 100%;
   text-align: center;
@@ -99,15 +108,30 @@ h2 {
   text-overflow: ellipsis;
   white-space: nowrap;
   box-sizing: border-box;
+  height: 44px;            /* same height as CTAs */
+  display: flex;           /* vertically center content */
+  align-items: center;
+  justify-content: center;
 }
 
+/* No hover highlight for items */
 .item:hover {
-  background-color: #2c2c2c;
+  background-color: inherit;
 }
 
 .item.selected {
   background-color: #1976d2;
   border-color: #2196f3;
+}
+
+.item.status-partial {
+  background-color: rgba(255, 165, 0, 0.2); /* pleasant orange */
+  color: #ffa500; /* orange text */
+}
+
+.item.status-full {
+  background-color: rgba(46, 160, 67, 0.25); /* pleasant green */
+  color: #2ea043; /* green text */
 }
 
 /* Header container with title and action buttons */
@@ -156,7 +180,6 @@ button {
   cursor: pointer;
   transition: background-color 0.2s;
   padding: 10px 16px;
-  font-size: 14px;
   margin: 10px auto;
 }
 
@@ -189,6 +212,12 @@ button:not(.default):hover {
   transform: scale(1.1);
 }
 
+/* Do not scale item buttons on hover */
+button.item:hover {
+  transform: none !important;
+  background-color: inherit;
+}
+
 /* Icon button styles */
 .icon-button {
   display: flex;
@@ -202,10 +231,46 @@ button:not(.default):hover {
   box-sizing: border-box;
 }
 
-.icon-button img,
-.icon-button svg {
+.status-cta .icon-button {
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+}
+
+/* Single status indicator CTA (uses secondary dark look like Back-To-Orders) */
+.status-indicator {
+  border-radius: 8px;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+.status-indicator:hover {
+  background-color: #2c2c2c;
+  transform: scale(1.1);
+}
+
+/* Status icon coloring via CSS filters (SVGs are black by default) */
+.status-indicator.open img {
+  /* white */
+  filter: invert(1) !important;
+}
+
+.status-indicator.partial img {
+  /* orange */
+  filter: invert(38%) sepia(93%) saturate(746%) hue-rotate(359deg) brightness(96%) contrast(102%) !important;
+}
+
+.status-indicator.full img {
+  /* green */
+  filter: invert(46%) sepia(18%) saturate(1135%) hue-rotate(76deg) brightness(93%) contrast(92%) !important;
+}
+
+/* Icon sizes inside icon buttons */
+.icon-button svg,
+.icon-button img {
   width: 24px; /* unify with client */
   height: 24px;
+  display: block; /* tighten vertical alignment */
 }
 
 /* Disabled button styles */
@@ -284,11 +349,7 @@ button.icon-button:not(.default) svg {
   filter: brightness(0) invert(1);
 }
 
-/* Tighten icon vertical alignment inside CTAs */
-.icon-button svg,
-.icon-button img {
-  display: block;
-}
+/* (display: block) handled above with sizes */
 
 /* Form button (login) */
 form .icon-button {

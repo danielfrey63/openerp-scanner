@@ -140,10 +140,15 @@ const Camera = ({ onScanComplete }: CameraProps) => {
           onChange={(e) => {
             const id = e.target.value;
             setSelectedDeviceId(id);
-            if (isScanning) {
+            const wasScanning = isScanning;
+            if (wasScanning) {
+              // Restart immediately on the newly selected device
               stopScanner();
+              void startScanner(id);
+            } else {
+              // Do not auto-start when it was stopped
+              // No-op: user can start via CTA
             }
-            void startScanner(id);
           }}
           disabled={isLoadingCameras || devices.length === 0}
           aria-label="Kamera auswählen"

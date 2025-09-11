@@ -4,6 +4,7 @@ import { OpenERPClient, OpenERPConfig } from '@danielfrey63/openerp-ts-client';
 import { useOpenERP } from "@/context/OpenERPContext.js";
 import LoginIcon from "@/icons/login-icon.svg";
 import Logo from "@/icons/logo.svg";
+import { setGrace } from "@/utils/sessionGrace.js";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -85,6 +86,9 @@ const Login: React.FC = () => {
         
         // Store the authenticated client in context
         setClient(client);
+        // Set short-lived grace so user stays logged in after reloads
+        const appVersion = (import.meta as any).env?.VITE_APP_VERSION || 'dev';
+        setGrace(appVersion, 5 * 60 * 1000);
         
         navigate('/orders');
       } catch (loginError) {

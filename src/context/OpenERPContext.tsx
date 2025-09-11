@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { OpenERPClient, Session } from '@danielfrey63/openerp-ts-client';
+import { isGraceValid } from '@/utils/sessionGrace.js';
 
 interface OpenERPContextType {
   client: OpenERPClient | null;
@@ -33,7 +34,7 @@ export const OpenERPProvider: React.FC<OpenERPProviderProps> = ({ children }) =>
     client,
     session: client?.session || null,
     setClient,
-    isAuthenticated: !!client?.session,
+    isAuthenticated: !!client?.session || isGraceValid((import.meta as any).env?.VITE_APP_VERSION || 'dev'),
   };
 
   return (
