@@ -13,6 +13,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'qr-scanner-library': path.resolve(__dirname, '../qr-scanner-library/src'),
       stream: 'stream-browserify',
       timers: 'timers-browserify',
       buffer: 'buffer',

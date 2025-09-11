@@ -4,7 +4,8 @@ interface FileUploadProps {
   onScanComplete: (data: string) => void;
 }
 
-const FileUpload = ({ onScanComplete }: FileUploadProps) => {
+// onScanComplete is currently unused since upload scanning is deprecated; prefix with _ to satisfy TS noUnusedParameters
+const FileUpload = ({ onScanComplete: _onScanComplete }: FileUploadProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
