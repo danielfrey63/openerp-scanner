@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { OpenERPClient, Session } from '@danielfrey63/openerp-ts-client';
 import { isGraceValid } from '@/utils/sessionGrace.js';
+import { syncService } from '@/services/syncService.js';
 
 interface OpenERPContextType {
   client: OpenERPClient | null;
@@ -28,7 +29,14 @@ export const OpenERPProvider: React.FC<OpenERPProviderProps> = ({ children }) =>
   // Initialize the client if it doesn't exist
   const setClient = (newClient: OpenERPClient) => {
     setClientState(newClient);
+    // Update sync service with new client
+    syncService.setClient(newClient);
   };
+
+  // Initialize sync service when client changes
+  useEffect(() => {
+    syncService.setClient(client);
+  }, [client]);
 
   const value = {
     client,

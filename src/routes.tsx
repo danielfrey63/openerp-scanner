@@ -4,6 +4,7 @@ import Login from '@/components/Login.js';
 import OrderList from '@/components/OrderList.js';
 import OrderDetails from '@/components/OrderDetails.js';
 import ProtectedRoute from '@/components/ProtectedRoute.js';
+import CacheInitializer from '@/components/CacheInitializer.js';
 
 export const router = createBrowserRouter([
   {
@@ -13,6 +14,16 @@ export const router = createBrowserRouter([
       {
         path: '',
         element: <Login />
+      },
+      {
+        path: 'cache-initializer',
+        element: <ProtectedRoute><CacheInitializer
+          onComplete={() => window.location.href = '/orders'}
+          onError={(error) => {
+            console.error('Cache initialization failed:', error);
+            window.location.href = '/orders';
+          }}
+        /></ProtectedRoute>
       },
       {
         path: 'orders',

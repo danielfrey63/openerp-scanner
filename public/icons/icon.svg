@@ -1,0 +1,75 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="qrGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0f0f0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" ry="80" fill="url(#bgGradient)"/>
+  
+  <!-- QR Code Frame -->
+  <rect x="96" y="96" width="320" height="320" rx="20" ry="20" fill="url(#qrGradient)" stroke="#333" stroke-width="4"/>
+  
+  <!-- QR Code Pattern -->
+  <!-- Corner squares -->
+  <rect x="120" y="120" width="60" height="60" fill="#333"/>
+  <rect x="332" y="120" width="60" height="60" fill="#333"/>
+  <rect x="120" y="332" width="60" height="60" fill="#333"/>
+  
+  <!-- Corner square centers -->
+  <rect x="135" y="135" width="30" height="30" fill="white"/>
+  <rect x="347" y="135" width="30" height="30" fill="white"/>
+  <rect x="135" y="347" width="30" height="30" fill="white"/>
+  
+  <!-- Data pattern -->
+  <rect x="210" y="120" width="15" height="15" fill="#333"/>
+  <rect x="240" y="120" width="15" height="15" fill="#333"/>
+  <rect x="270" y="120" width="15" height="15" fill="#333"/>
+  <rect x="300" y="120" width="15" height="15" fill="#333"/>
+  
+  <rect x="120" y="210" width="15" height="15" fill="#333"/>
+  <rect x="150" y="210" width="15" height="15" fill="#333"/>
+  <rect x="210" y="210" width="15" height="15" fill="#333"/>
+  <rect x="240" y="210" width="15" height="15" fill="#333"/>
+  <rect x="270" y="210" width="15" height="15" fill="#333"/>
+  <rect x="300" y="210" width="15" height="15" fill="#333"/>
+  <rect x="330" y="210" width="15" height="15" fill="#333"/>
+  <rect x="360" y="210" width="15" height="15" fill="#333"/>
+  <rect x="390" y="210" width="15" height="15" fill="#333"/>
+  
+  <rect x="120" y="240" width="15" height="15" fill="#333"/>
+  <rect x="180" y="240" width="15" height="15" fill="#333"/>
+  <rect x="240" y="240" width="15" height="15" fill="#333"/>
+  <rect x="300" y="240" width="15" height="15" fill="#333"/>
+  <rect x="360" y="240" width="15" height="15" fill="#333"/>
+  
+  <rect x="150" y="270" width="15" height="15" fill="#333"/>
+  <rect x="210" y="270" width="15" height="15" fill="#333"/>
+  <rect x="270" y="270" width="15" height="15" fill="#333"/>
+  <rect x="330" y="270" width="15" height="15" fill="#333"/>
+  <rect x="390" y="270" width="15" height="15" fill="#333"/>
+  
+  <rect x="120" y="300" width="15" height="15" fill="#333"/>
+  <rect x="180" y="300" width="15" height="15" fill="#333"/>
+  <rect x="240" y="300" width="15" height="15" fill="#333"/>
+  <rect x="300" y="300" width="15" height="15" fill="#333"/>
+  <rect x="360" y="300" width="15" height="15" fill="#333"/>
+  
+  <rect x="210" y="360" width="15" height="15" fill="#333"/>
+  <rect x="240" y="360" width="15" height="15" fill="#333"/>
+  <rect x="270" y="360" width="15" height="15" fill="#333"/>
+  <rect x="300" y="360" width="15" height="15" fill="#333"/>
+  <rect x="330" y="360" width="15" height="15" fill="#333"/>
+  <rect x="360" y="360" width="15" height="15" fill="#333"/>
+  <rect x="390" y="360" width="15" height="15" fill="#333"/>
+  
+  <!-- Scanner beam effect -->
+  <rect x="96" y="250" width="320" height="4" fill="#ff6b6b" opacity="0.8"/>
+  <rect x="96" y="258" width="320" height="2" fill="#ff9999" opacity="0.6"/>
+</svg>

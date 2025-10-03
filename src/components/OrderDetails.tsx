@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOpenERP } from '@/context/OpenERPContext.js';
-import { OrderLine as ClientOrderLine } from '@danielfrey63/openerp-ts-client';
+import { OrderLine } from '@/data/orderRepo.js';
 import BackIcon from '@/icons/back-icon.svg';
-import Logo from '@/icons/logo.svg';
+import SyncLogo from '@/components/SyncLogo.js';
 import CameraIcon from '@/icons/camera-icon.svg';
 import Camera from '@/components/Camera.js';
+// SyncStatus removed - sync happens automatically in background
 import { extractProductIdFromUrlOrPayload, first4AndLastEqual, getOrderLineCode, getDefaultQuantityFromCode } from '@/utils/orderProcessing.js';
 import PlusIcon from '@/icons/plus.svg';
 import MinusIcon from '@/icons/minus.svg';
@@ -16,12 +17,7 @@ import StatusPartialIcon from '@/icons/status-partial.svg';
 import StatusFullIcon from '@/icons/status-full.svg';
 import { getLineStatus, getDeliveredQty, getOrderSession } from '@/utils/sessionStore.js';
 import { orderRepo } from '@/data/orderRepo.js';
-
-interface OrderLine extends ClientOrderLine {
-  id: number;
-  product_id: [number, string];
-  product_uom_qty: number;
-}
+import { useOrderSync } from '@/hooks/useBackgroundSync.js';
 
 const OrderDetails: React.FC = () => {
   const { orderId } = useParams();
@@ -39,40 +35,39 @@ const OrderDetails: React.FC = () => {
   const [productChanges, setProductChanges] = useState<Record<number, { oldCode: string; newCode: string }>>({});
   const { client, isAuthenticated } = useOpenERP();
 
-  useEffect(() => {
-    const fetchOrderLines = async () => {
-      try {
-        if (!client || !isAuthenticated) {
-          throw new Error('Not authenticated');
-        }
+  // Background sync for this order
+  const {
+    orderConflicts,
+    hasOrderConflicts,
+    resolveConflict
+  } = useOrderSync(parseInt(orderId || '0'));
 
+  useEffect(() => {
+    const fetchOrderLinesFromCache = async () => {
+      try {
         if (!orderId) {
           throw new Error('Order ID is required');
         }
 
-        const lines = await client.getSaleOrderLines(parseInt(orderId));
-        // Convert the returned lines to match our OrderLine interface
-        const typedLines = lines.map(line => ({
-          ...line,
-          id: (line as any).id || Math.random() // Use existing id or generate a random one
-        })) as OrderLine[];
-        setOrderLines(typedLines);
-        // Persist ERP snapshot locally and initialize targetQty from snapshot
-        if (orderId) {
-          const oid = parseInt(orderId);
-          const orderSnapshot = { id: oid, name: `Order ${oid}` };
-          const lineSnapshots = typedLines.map(l => ({
-            id: l.id,
-            name: l.name,
-            productCode: (l.product_id?.[1]?.match(/\[(.*?)\]/)?.[1]) || (getOrderLineCode(l.name) || ''),
-            productId: l.product_id?.[0],
-            product_uom_qty: l.product_uom_qty,
-          }));
-          orderRepo.upsertSnapshot(oid, orderSnapshot, lineSnapshots);
-          orderRepo.setTargetQtyFromSnapshot(oid);
-        }
+        const oid = parseInt(orderId);
+        
+        // Sicherstellen, dass Order im Cache ist
+        await orderRepo.ensureOrderCached(oid);
+        
+        // Order-Lines aus Cache laden
+        const cachedLines = orderRepo.getOrderLinesFromCache(oid);
+        setOrderLines(cachedLines);
+        
+        // Target-Mengen aus Cache initialisieren
+        orderRepo.setTargetQtyFromSnapshot(oid);
+        
+        // Nutzung der Order tracken für intelligente Priorisierung
+        import('@/services/syncService.js').then(({ syncService }) => {
+          syncService.trackOrderUsage?.(oid);
+        });
+        
       } catch (err) {
-        setError('Failed to fetch order lines: ' + (err instanceof Error ? err.message : String(err)));
+        setError('Failed to load order lines from cache: ' + (err instanceof Error ? err.message : String(err)));
         
         // If not authenticated, redirect to login
         if (err instanceof Error && err.message === 'Not authenticated') {
@@ -81,10 +76,10 @@ const OrderDetails: React.FC = () => {
       }
     };
 
-    if (orderId) {
-      fetchOrderLines();
+    if (orderId && isAuthenticated) {
+      fetchOrderLinesFromCache();
     }
-  }, [client, isAuthenticated, orderId, navigate]);
+  }, [orderId, isAuthenticated, navigate]);
 
   // Compute next pending line: first line that is NOT full according to session store
   const nextPendingLine = useMemo(() => {
@@ -293,9 +288,69 @@ const OrderDetails: React.FC = () => {
     <div className="list">
       <div className="header-container">
         <div className="title-with-logo">
-          <img src={Logo} alt="Logo" className="header-logo" />
+          <SyncLogo className="header-logo" />
           <h2>Order Details</h2>
         </div>
+
+        {/* Sync Status removed - sync happens automatically in background */}
+
+        {/* Conflict Resolution UI */}
+        {hasOrderConflicts && (
+          <div style={{
+            margin: '10px 0',
+            padding: '12px',
+            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+            border: '2px solid #ff6b6b',
+            borderRadius: '8px',
+            color: 'white'
+          }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>
+              ⚠️ Synchronisationskonflikte ({orderConflicts.length})
+            </h4>
+            {orderConflicts.map(conflict => (
+              <div key={conflict.id} style={{
+                marginBottom: '8px',
+                fontSize: '12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>{conflict.type === 'line_modified' ? 'Zeile geändert' : 'Bestellung geändert'}</span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button
+                    onClick={() => resolveConflict(conflict.id, 'local')}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '10px',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      borderRadius: '4px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Lokal
+                  </button>
+                  <button
+                    onClick={() => resolveConflict(conflict.id, 'server')}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '10px',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      borderRadius: '4px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Server
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="action-buttons">
           {/* Camera toggle */}
           {!showCamera ? (
@@ -336,9 +391,12 @@ const OrderDetails: React.FC = () => {
               <img src={StopIcon} alt="Stop" />
             </button>
           )}
+
+          {/* Sync Button removed - sync happens automatically in background */}
+
           {/* Back secondary */}
-          <button 
-            onClick={() => navigate('/orders')} 
+          <button
+            onClick={() => navigate('/orders')}
             className={`icon-button`}
             title="Back to Orders"
             onKeyDown={(e) => {

@@ -1,12 +1,29 @@
 // Lightweight offline-ready repository for Orders and OrderLines
 // Storage backend: localStorage (can be swapped for IndexedDB later)
 
-import { getOrderSession, addDeliveredQty, setDeliveredQty, setTargetQty, getLineStatus, getOrderStatus } from '@/utils/sessionStore.js';
+import { getOrderSession, addDeliveredQty, setDeliveredQty, getDeliveredQty, setTargetQty, getLineStatus, getOrderStatus } from '@/utils/sessionStore.js';
+
+// Interface für UI-Kompatibilität
+export interface Order {
+  id: number;
+  name: string;
+  partner_id: [number, string];
+}
+
+export interface OrderLine {
+  id: number;
+  name: string;
+  product_id: [number, string];
+  product_uom_qty: number;
+  price_unit?: number;
+  productCode?: string;
+  productId?: number;
+}
 
 export interface OrderSnapshot {
   id: number;
   name: string;
-  partner?: string;
+  partner: string; // Partner-Name als String (wird aus partner_id[1] extrahiert)
 }
 
 export interface OrderLineSnapshot {
@@ -24,6 +41,7 @@ export interface OrderRecord {
     updatedAt: string;
     lastSyncedAt: string | null;
     revision: number;
+    syncStatus: 'synced' | 'pending' | 'local-only' | 'syncing';
   };
   snapshot: {
     order: OrderSnapshot;
@@ -31,6 +49,7 @@ export interface OrderRecord {
   };
   pending?: {
     productUpdates?: Array<{ id: string; lineId: number; oldCode: string; newCode: string; ts: string; synced?: boolean }>;
+    deliveryUpdates?: Array<{ id: string; lineId: number; oldQty: number; newQty: number; ts: string; synced?: boolean }>;
   };
 }
 
@@ -85,7 +104,7 @@ export const orderRepo = {
     const key = LS_PREFIX + orderId;
     const existing = localStorage.getItem(key);
     const base: OrderRecord = existing ? JSON.parse(existing) : {
-      meta: { version: 1, createdAt: now(), updatedAt: now(), lastSyncedAt: null, revision: 0 },
+      meta: { version: 1, createdAt: now(), updatedAt: now(), lastSyncedAt: null, revision: 0, syncStatus: 'local-only' },
       snapshot: { order, lines }
     };
     // If there are pending product updates, apply the latest newCode per line to the incoming snapshot,
@@ -128,15 +147,37 @@ export const orderRepo = {
     emit(orderId);
   },
 
-  // Optimistic local change: increments delivered and triggers subscribers
+  // Optimistic local change: increments delivered and triggers sync
   deliverLine(orderId: number, lineId: number, delta: number) {
+    const currentQty = getDeliveredQty(orderId, lineId);
+    const newQty = Math.max(0, currentQty + delta);
+
+    // 1. Lokalen Cache sofort aktualisieren
     addDeliveredQty(orderId, lineId, delta);
+
+    // 2. Delta für Sync vormerken
+    this.queueDeliveryUpdate(orderId, lineId, currentQty, newQty);
+
+    // 3. Sofortiger Up-Sync-Versuch (ohne Online-Check!)
+    this.triggerDeliverySync(orderId, lineId, newQty);
+
     emit(orderId);
   },
 
-  // Optimistic local change: set delivered to an absolute value and trigger subscribers
+  // Optimistic local change: set delivered to absolute value and trigger sync
   setDeliveredAbsolute(orderId: number, lineId: number, qty: number) {
-    setDeliveredQty(orderId, lineId, Math.max(0, qty));
+    const currentQty = getDeliveredQty(orderId, lineId);
+    const newQty = Math.max(0, qty);
+
+    // 1. Lokalen Cache sofort aktualisieren
+    setDeliveredQty(orderId, lineId, newQty);
+
+    // 2. Delta für Sync vormerken
+    this.queueDeliveryUpdate(orderId, lineId, currentQty, newQty);
+
+    // 3. Sofortiger Up-Sync-Versuch (ohne Online-Check!)
+    this.triggerDeliverySync(orderId, lineId, newQty);
+
     emit(orderId);
   },
 
@@ -205,6 +246,183 @@ export const orderRepo = {
     }
   },
 
+  markProductUpdateSynced(orderId: number, updateId: string) {
+    const key = LS_PREFIX + orderId;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    try {
+      const rec = JSON.parse(raw) as OrderRecord;
+      const list = rec.pending?.productUpdates || [];
+      const updatedList = list.map(u =>
+        u.id === updateId ? { ...u, synced: true } : u
+      );
+      const newRec: OrderRecord = {
+        ...rec,
+        meta: { ...rec.meta, updatedAt: new Date().toISOString(), revision: rec.meta.revision + 1 },
+        pending: { ...(rec.pending || {}), productUpdates: updatedList }
+      };
+      localStorage.setItem(key, JSON.stringify(newRec));
+      emit(orderId);
+    } catch {
+      // ignore
+    }
+  },
+
+  // Delta-Tracking für Delivery-Updates
+  queueDeliveryUpdate(orderId: number, lineId: number, oldQty: number, newQty: number) {
+    const key = LS_PREFIX + orderId;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    try {
+      const rec = JSON.parse(raw) as OrderRecord;
+      const pending = rec.pending || {};
+      const list = pending.deliveryUpdates || [];
+      const id = `del_${orderId}_${lineId}_${Date.now()}`;
+      const entry = { id, lineId, oldQty, newQty, ts: new Date().toISOString(), synced: false };
+      const newRec: OrderRecord = {
+        ...rec,
+        meta: {
+          ...rec.meta,
+          updatedAt: new Date().toISOString(),
+          revision: rec.meta.revision + 1,
+          syncStatus: 'pending'
+        },
+        pending: { ...pending, deliveryUpdates: [...list, entry] }
+      };
+      localStorage.setItem(key, JSON.stringify(newRec));
+      emit(orderId);
+    } catch {
+      // ignore
+    }
+  },
+
+  markDeliveryUpdateSynced(orderId: number, updateId: string) {
+    const key = LS_PREFIX + orderId;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    try {
+      const rec = JSON.parse(raw) as OrderRecord;
+      const list = rec.pending?.deliveryUpdates || [];
+      const updatedList = list.map(u =>
+        u.id === updateId ? { ...u, synced: true } : u
+      );
+      const newRec: OrderRecord = {
+        ...rec,
+        meta: { ...rec.meta, updatedAt: new Date().toISOString(), revision: rec.meta.revision + 1 },
+        pending: { ...(rec.pending || {}), deliveryUpdates: updatedList }
+      };
+      localStorage.setItem(key, JSON.stringify(newRec));
+      emit(orderId);
+    } catch {
+      // ignore
+    }
+  },
+
+  markAsFullySynced(orderId: number) {
+    const key = LS_PREFIX + orderId;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    try {
+      const rec = JSON.parse(raw) as OrderRecord;
+      const newRec: OrderRecord = {
+        ...rec,
+        meta: {
+          ...rec.meta,
+          lastSyncedAt: new Date().toISOString(),
+          syncStatus: 'synced'
+        }
+      };
+      localStorage.setItem(key, JSON.stringify(newRec));
+      emit(orderId);
+    } catch {
+      // ignore
+    }
+  },
+
+  markAsSyncing(orderId: number) {
+    const key = LS_PREFIX + orderId;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    try {
+      const rec = JSON.parse(raw) as OrderRecord;
+      const newRec: OrderRecord = {
+        ...rec,
+        meta: {
+          ...rec.meta,
+          syncStatus: 'syncing'
+        }
+      };
+      localStorage.setItem(key, JSON.stringify(newRec));
+      emit(orderId);
+    } catch {
+      // ignore
+    }
+  },
+
+  markAsLocalOnly(orderId: number) {
+    const key = LS_PREFIX + orderId;
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    try {
+      const rec = JSON.parse(raw) as OrderRecord;
+      const newRec: OrderRecord = {
+        ...rec,
+        meta: {
+          ...rec.meta,
+          syncStatus: 'local-only'
+        }
+      };
+      localStorage.setItem(key, JSON.stringify(newRec));
+      emit(orderId);
+    } catch {
+      // ignore
+    }
+  },
+
+  hasPendingChanges(orderId: number): boolean {
+    const order = this.getOrder(orderId);
+    if (!order) return false;
+
+    const pendingProducts = order.pending?.productUpdates?.some(u => !u.synced) || false;
+    const pendingDeliveries = order.pending?.deliveryUpdates?.some(u => !u.synced) || false;
+
+    return pendingProducts || pendingDeliveries;
+  },
+
+  triggerDeliverySync(orderId: number, lineId: number, newQty: number) {
+    // Dynamischer Import um zirkuläre Abhängigkeiten zu vermeiden
+    import('@/services/syncService.js').then(({ syncService }) => {
+      syncService.syncDeliveryChange(orderId, lineId, newQty)
+        .catch(error => {
+          console.log('[OrderRepo] Sync failed, keeping delta:', error);
+          // Delta bleibt in pending, wird bei Logo-Klick synchronisiert
+        });
+    });
+  },
+
+  getAllOrderRecords(): Record<string, OrderRecord> {
+    const result: Record<string, OrderRecord> = {};
+
+    // Durchsuche localStorage nach allen Order-Records
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(LS_PREFIX)) {
+        try {
+          const orderIdStr = key.substring(LS_PREFIX.length);
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const record = JSON.parse(raw) as OrderRecord;
+            result[orderIdStr] = record;
+          }
+        } catch {
+          // Ignore invalid records
+        }
+      }
+    }
+
+    return result;
+  },
+
   clearProductUpdate(orderId: number, updateId: string) {
     const key = LS_PREFIX + orderId;
     const raw = localStorage.getItem(key);
@@ -225,19 +443,58 @@ export const orderRepo = {
     }
   },
 
-  // Debug: get all cached orders from localStorage
-  getAllOrderRecords(): Record<string, OrderRecord> {
-    const out: Record<string, OrderRecord> = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)!;
-      if (key.startsWith(LS_PREFIX)) {
-        try {
-          out[key.substring(LS_PREFIX.length)] = JSON.parse(localStorage.getItem(key) || '{}');
-        } catch {
-          // ignore
-        }
+  // Cache-First Methoden für UI-Komponenten
+  
+  // Sicherstellen, dass Daten im Cache vorhanden sind
+  ensureOrderCached(orderId: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.getOrder(orderId)) {
+        resolve();
+        return;
       }
-    }
-    return out;
-  }
+      
+      // Wenn nicht im Cache, über Sync-Service laden
+      import('@/services/syncService.js').then(({ syncService }) => {
+        syncService.loadOrderDetails(orderId)
+          .then(() => resolve())
+          .catch(reject);
+      });
+    });
+  },
+  
+  // Alle Orders aus Cache laden
+  getAllOrdersFromCache(): Order[] {
+    const cachedOrders = this.getAllOrderRecords();
+    return Object.values(cachedOrders).map(record => ({
+      id: record.snapshot.order.id,
+      name: record.snapshot.order.name,
+      partner_id: typeof record.snapshot.order.partner === 'string'
+        ? [0, record.snapshot.order.partner]
+        : record.snapshot.order.partner || [0, 'Unknown Partner']
+    }));
+  },
+  
+  // Order-Lines aus Cache laden
+  getOrderLinesFromCache(orderId: number): OrderLine[] {
+    const order = this.getOrder(orderId);
+    if (!order) return [];
+    
+    return order.snapshot.lines.map(line => ({
+      ...line,
+      product_id: [line.productId || 0, line.name],
+      price_unit: 0 // Standardwert, da nicht im Cache gespeichert
+    }));
+  },
+  
+  // Anzahl der ausstehenden Änderungen für eine Order
+  getPendingChangesCount(orderId: number): number {
+    const order = this.getOrder(orderId);
+    if (!order) return 0;
+    
+    const deliveryCount = order.pending?.deliveryUpdates?.filter(u => !u.synced).length || 0;
+    const productCount = order.pending?.productUpdates?.filter(u => !u.synced).length || 0;
+    
+    return deliveryCount + productCount;
+  },
+
 };

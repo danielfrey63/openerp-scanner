@@ -1,12 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>OpenERP Scanner</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#667eea" />
+    <meta name="msapplication-TileColor" content="#667eea" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+
+    <!-- Standard Icons -->
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="OpenERP Scanner" />
+    <meta name="apple-mobile-web-app-title" content="ERP Scanner" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Description -->
+    <meta name="description" content="QR Code Scanner für OpenERP Order Management - Vollständig offline-fähige Progressive Web App" />
+    <meta name="keywords" content="OpenERP, QR Scanner, Order Management, PWA, Offline" />
+
+    <!-- Critical resources are automatically preloaded by Vite -->
+
+    <!-- Prevent zoom on iOS -->
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Splash screen background -->
+    <style>
+      #root {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      /* Loading spinner for initial load */
+      .loading-spinner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+      }
+
+      @keyframes spin {
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Loading indicator -->
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Service Worker Registration -->
+    <script>
+      // Register service worker (only in production/HTTPS)
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+
+              // Check for updates
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // New content is available, notify user
+                    if (confirm('Neue Version verfügbar. Jetzt aktualisieren?')) {
+                      newWorker.postMessage({ type: 'SKIP_WAITING' });
+                      window.location.reload();
+                    }
+                  }
+                });
+              });
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      } else if ('serviceWorker' in navigator) {
+        console.log('Service Worker requires HTTPS or localhost for security');
+      }
+
+      // Listen for service worker messages (always available)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          const { type, data } = event.data;
+
+          switch (type) {
+            case 'SYNC_COMPLETE':
+              console.log('Background sync completed:', data);
+              // Dispatch custom event for app to handle
+              window.dispatchEvent(new CustomEvent('sw-sync-complete', { detail: data }));
+              break;
+
+            case 'CACHE_CLEARED':
+              console.log('Cache cleared by service worker');
+              break;
+
+            default:
+              console.log('Unknown SW message:', type, data);
+          }
+        });
+      }
+
+      // PWA Install Prompt
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Show install button or banner
+        window.dispatchEvent(new CustomEvent('pwa-installable'));
+      });
+
+      // PWA Install function (can be called from app)
+      window.installPWA = async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('PWA install outcome:', outcome);
+          deferredPrompt = null;
+          return outcome === 'accepted';
+        }
+        return false;
+      };
+
+      // Network status detection
+      window.addEventListener('online', () => {
+        window.dispatchEvent(new CustomEvent('network-status', { detail: { online: true } }));
+      });
+
+      window.addEventListener('offline', () => {
+        window.dispatchEvent(new CustomEvent('network-status', { detail: { online: false } }));
+      });
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

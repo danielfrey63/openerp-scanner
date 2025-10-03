@@ -48,18 +48,18 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
+
     // Validate all required fields
     if (!selectedDb) {
       setError('Bitte wählen Sie eine Datenbank aus');
       return;
     }
-    
+
     if (!username) {
       setError('Bitte geben Sie einen Benutzernamen ein');
       return;
     }
-    
+
     if (!password) {
       setError('Bitte geben Sie ein Passwort ein');
       return;
@@ -71,26 +71,30 @@ const Login: React.FC = () => {
       return;
     }
 
+    setError('');
+
     try {
-      const config: OpenERPConfig = { 
+      const config: OpenERPConfig = {
         baseUrl
       };
       const client = new OpenERPClient(config);
-      
+
       console.log('Attempting login to:', baseUrl);
       console.log('Database:', selectedDb);
       console.log('Username:', username);
-      
+
       try {
         await client.login({ db: selectedDb, username, password });
-        
+
         // Store the authenticated client in context
         setClient(client);
+
         // Set short-lived grace so user stays logged in after reloads
         const appVersion = (import.meta as any).env?.VITE_APP_VERSION || 'dev';
         setGrace(appVersion, 5 * 60 * 1000);
-        
-        navigate('/orders');
+
+        // Zur Cache-Initialisierung navigieren
+        navigate('/cache-initializer');
       } catch (loginError) {
         console.error('Login API error:', loginError);
         let errorMessage = 'Login failed';
@@ -122,12 +126,12 @@ const Login: React.FC = () => {
           <h2>OpenERP Login</h2>
         </div>
         <div className="action-buttons">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={`icon-button ${selectedDb && username && password ? 'default' : 'disabled'}`}
             onClick={handleLogin}
             disabled={!selectedDb || !username || !password}
-            title={!selectedDb ? "Bitte zuerst eine Datenbank auswählen" : 
+            title={!selectedDb ? "Bitte zuerst eine Datenbank auswählen" :
                   !username ? "Bitte Benutzernamen eingeben" :
                   !password ? "Bitte Passwort eingeben" : "Login"}
           >

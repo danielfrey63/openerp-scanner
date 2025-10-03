@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import basicSsl from '@vitejs/plugin-basic-ssl'
+import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 // Configuration to fix Node.js module warnings in the browser
@@ -31,10 +32,38 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills(),
-    basicSsl()
+    basicSsl(),
+    VitePWA({
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'icons/*.png', 'icons/*.svg'],
+      manifest: {
+        name: 'OpenERP Scanner',
+        short_name: 'ERP Scanner',
+        description: 'QR Code Scanner für OpenERP Order Management',
+        theme_color: '#667eea',
+        background_color: '#ffffff',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: 'icons/icon.svg',
+            sizes: '512x512',
+            type: 'image/svg+xml'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+      },
+      devOptions: {
+        enabled: false, // Disable in development to avoid SSL issues
+        type: 'module'
+      }
+    })
   ],
   server: {
-    host: true, // Allow access over local network
+    host: true, // Use localhost for HTTPS/Service Worker compatibility
     port: 5174,
     strictPort: true,
     hmr: {
