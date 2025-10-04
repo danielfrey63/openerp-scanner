@@ -88,8 +88,8 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ className = '' }) =
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    // Don't show again for this session
-    sessionStorage.setItem('pwa-install-dismissed', 'true');
+    // Store dismissal timestamp
+    sessionStorage.setItem('pwa-install-dismissed', new Date().toISOString());
   };
 
   // Don't show if already installed or dismissed
@@ -109,9 +109,21 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ className = '' }) =
   }
 
   // Check if dismissed in this session
-  if (sessionStorage.getItem('pwa-install-dismissed')) {
-    console.log('PWAInstallPrompt: Not showing - dismissed in this session');
-    return null;
+  const dismissedTime = sessionStorage.getItem('pwa-install-dismissed');
+  if (dismissedTime) {
+    const dismissed = new Date(dismissedTime);
+    const now = new Date();
+    const timeDiff = now.getTime() - dismissed.getTime();
+    
+    // Allow showing again after 30 minutes
+    if (timeDiff < 30 * 60 * 1000) {
+      console.log('PWAInstallPrompt: Not showing - dismissed in this session');
+      return null;
+    } else {
+      // Clear expired dismissal
+      sessionStorage.removeItem('pwa-install-dismissed');
+      console.log('PWAInstallPrompt: Dismissal expired, allowing prompt');
+    }
   }
 
   console.log('PWAInstallPrompt: Showing install prompt');

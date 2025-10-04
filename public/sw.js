@@ -14,13 +14,12 @@ const CACHE_TTL = {
   ORDER_DATA: 30 * 60 * 1000         // 30 minutes
 };
 
-// Static assets to precache
+// Static assets to precache - will be populated by build process
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/src/main.tsx',
-  '/src/App.css',
-  '/manifest.json'
+  '/manifest.json',
+  '/icons/icon.svg'
 ];
 
 // API endpoints patterns
@@ -119,23 +118,41 @@ async function cacheFirstStrategy(request, cacheName) {
     }
     
     console.log('[SW] Cache miss (static), fetching:', request.url);
-    const networkResponse = await fetch(request);
     
-    if (networkResponse.ok) {
-      const responseClone = networkResponse.clone();
-      await cache.put(request, responseClone);
-      console.log('[SW] Static asset cached:', request.url);
+    // For static assets, always try network first if cache miss
+    try {
+      const networkResponse = await fetch(request);
+      
+      if (networkResponse.ok) {
+        const responseClone = networkResponse.clone();
+        await cache.put(request, responseClone);
+        console.log('[SW] Static asset cached:', request.url);
+        return networkResponse;
+      }
+    } catch (networkError) {
+      console.log('[SW] Network failed for static asset:', request.url, networkError);
     }
     
-    return networkResponse;
+    // If network failed, try to serve from cache even if expired
+    if (cachedResponse) {
+      console.log('[SW] Serving expired cache as fallback:', request.url);
+      return cachedResponse;
+    }
+    
+    // Return offline fallback for HTML requests
+    if (request.destination === 'document') {
+      return createOfflineFallback();
+    }
+    
+    throw new Error(`Failed to load static asset: ${request.url}`);
   } catch (error) {
     console.error('[SW] Cache-first strategy failed:', error);
     
-    // Fallback to cache even if expired
+    // Final fallback - try cache one more time
     const cache = await caches.open(cacheName);
     const cachedResponse = await cache.match(request);
     if (cachedResponse) {
-      console.log('[SW] Serving expired cache as fallback:', request.url);
+      console.log('[SW] Final fallback to cache:', request.url);
       return cachedResponse;
     }
     
