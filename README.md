@@ -14,6 +14,31 @@ This app scans QR codes to update Sale Orders in OpenERP/Odoo. It provides a str
   npm run dev
   ```
 
+## PWA Installation (Progressive Web App)
+
+Der OpenERP Scanner kann als native App auf Ihrem Gerät installiert werden - ohne App Store!
+
+### **Schnellinstallation (Empfohlen)**
+1. App öffnen: `https://openerp-scanner.vercel.app`
+2. Installationsaufforderung abwarten (erscheint automatisch nach wenigen Sekunden)
+3. "Installieren" klicken
+4. Fertig! Die App erscheint auf Ihrem Startbildschirm
+
+### **Manuelle Installation**
+- **Chrome**: ⚡ Icon in Adressleiste → "App installieren"
+- **Safari (iOS)**: 📤 Teilen-Button → "Zum Startbildschirm hinzufügen"
+- **Firefox**: ≡ Menü → "Diese App installieren"
+- **Edge**: ⚡ Icon in Adressleiste → "Diese App installieren"
+
+### **Vorteile der PWA-Installation**
+- 🚀 **Schneller Start**: Kein Browser-Ladevorgang
+- 📱 **Vollbildmodus**: Wie eine native App
+- 🌐 **Offline-Funktion**: Funktioniert auch ohne Internet
+- 🔔 **Push-Benachrichtigungen**: Automatische Updates
+- 📂 **Kein App Store**: Direkte Installation
+
+📖 **Detaillierte Anleitung**: Siehe [`PWA_INSTALLATION.md`](./PWA_INSTALLATION.md)
+
 ## Authentication
 
 - Login via the start screen with your OpenERP endpoint and credentials.

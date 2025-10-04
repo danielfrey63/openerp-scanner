@@ -34,7 +34,7 @@ export default defineConfig({
     basicSsl(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'icons/*.png', 'icons/*.svg'],
+      includeAssets: ['favicon.ico', 'icons/*.svg'],
       manifest: {
         name: 'OpenERP Scanner',
         short_name: 'ERP Scanner',
@@ -47,8 +47,9 @@ export default defineConfig({
         icons: [
           {
             src: 'icons/icon.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml'
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
           }
         ]
       },

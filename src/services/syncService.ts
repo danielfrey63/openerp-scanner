@@ -56,11 +56,25 @@ class SyncService {
     }
 
     if (!this.client) {
-      throw new Error('OpenERP client not available');
+      console.warn('[SyncService] OpenERP client not available - skipping sync');
+      return {
+        success: false,
+        conflicts: [],
+        syncedOrders: [],
+        errors: ['OpenERP client not available - working in offline mode'],
+        timestamp: Date.now()
+      };
     }
 
     if (!networkService.getNetworkStatus().online) {
-      throw new Error('No network connection available');
+      console.warn('[SyncService] No network connection - skipping sync');
+      return {
+        success: false,
+        conflicts: [],
+        syncedOrders: [],
+        errors: ['No network connection - working in offline mode'],
+        timestamp: Date.now()
+      };
     }
 
     this.isSyncing = true;
@@ -437,11 +451,13 @@ class SyncService {
   // Einmalige Synchronisation nach Login (ERP → Lokal) mit Live-Updates
   async initialDownSync(): Promise<void> {
     if (!this.client) {
-      throw new Error('OpenERP client not available');
+      console.warn('[SyncService] OpenERP client not available - skipping initial down-sync');
+      return;
     }
 
     if (!networkService.getNetworkStatus().online) {
-      throw new Error('No network connection available for initial sync');
+      console.warn('[SyncService] No network connection - skipping initial down-sync');
+      return;
     }
 
     console.log('[SyncService] Starting initial down-sync...');
@@ -500,11 +516,13 @@ class SyncService {
   // Sofortige Delivery-Synchronisation (Lokal → ERP → Lokal)
   async syncDeliveryChange(orderId: number, lineId: number, newQty: number): Promise<void> {
     if (!networkService.isOnline()) {
-      throw new Error('Offline - sync will be retried later');
+      console.warn('[SyncService] Offline - delivery change will be retried later');
+      return;
     }
 
     if (!this.client) {
-      throw new Error('OpenERP client not available');
+      console.warn('[SyncService] OpenERP client not available - delivery change queued for later sync');
+      return;
     }
 
     try {
@@ -540,11 +558,13 @@ class SyncService {
   // Manuelle Synchronisation aller ausstehenden Änderungen
   async syncAllPendingChanges(): Promise<void> {
     if (!this.client) {
-      throw new Error('OpenERP client not available');
+      console.warn('[SyncService] OpenERP client not available - cannot sync pending changes');
+      return;
     }
 
     if (!networkService.getNetworkStatus().online) {
-      throw new Error('No network connection available');
+      console.warn('[SyncService] No network connection - cannot sync pending changes');
+      return;
     }
 
     console.log('[SyncService] Starting sync of all pending changes...');
@@ -604,11 +624,13 @@ class SyncService {
   // Vollständiger initialer Cache-Aufbau
   async loadAllOrders(): Promise<any[]> {
     if (!this.client) {
-      throw new Error('OpenERP client not available');
+      console.warn('[SyncService] OpenERP client not available - cannot load orders');
+      return [];
     }
 
     if (!networkService.getNetworkStatus().online) {
-      throw new Error('No network connection available for cache initialization');
+      console.warn('[SyncService] No network connection - cannot load orders');
+      return [];
     }
 
     console.log('[SyncService] Loading all orders for cache...');
@@ -634,7 +656,8 @@ class SyncService {
   // Order-Details für alle Orders laden
   async loadAllOrderDetails(orders: any[]): Promise<void> {
     if (!this.client) {
-      throw new Error('OpenERP client not available');
+      console.warn('[SyncService] OpenERP client not available - cannot load order details');
+      return;
     }
 
     console.log(`[SyncService] Loading details for ${orders.length} orders...`);
@@ -681,7 +704,8 @@ class SyncService {
   // Einzelne Order-Details laden
   async loadOrderDetails(orderId: number): Promise<void> {
     if (!this.client) {
-      throw new Error('OpenERP client not available');
+      console.warn('[SyncService] OpenERP client not available - cannot load order details');
+      return;
     }
 
     try {
