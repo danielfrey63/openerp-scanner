@@ -31,14 +31,29 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ className = '' }) =
     window.addEventListener('pwa-installable', handleInstallable);
 
     // Listen for app installed event
-    window.addEventListener('appinstalled', () => {
+    const handleAppInstalled = () => {
       setIsInstallable(false);
       setShowPrompt(false);
       console.log('PWA was installed');
-    });
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+    window.addEventListener('pwa-installed', handleAppInstalled);
+
+    // Fallback: Check PWA criteria and show prompt after delay
+    const fallbackTimer = setTimeout(() => {
+      if (!isStandalone && 'serviceWorker' in navigator && location.protocol === 'https:') {
+        console.log('PWAInstallPrompt: Fallback trigger - PWA criteria met');
+        setIsInstallable(true);
+        setTimeout(() => setShowPrompt(true), 2000);
+      }
+    }, 8000); // 8 seconds delay as fallback
 
     return () => {
       window.removeEventListener('pwa-installable', handleInstallable);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('pwa-installed', handleAppInstalled);
+      clearTimeout(fallbackTimer);
     };
   }, []);
 

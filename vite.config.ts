@@ -57,9 +57,12 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
       devOptions: {
-        enabled: false, // Disable in development to avoid SSL issues
+        enabled: true, // Enable in development for testing
         type: 'module'
-      }
+      },
+      // Disable automatic install prompt to use our custom implementation
+      strategies: 'generateSW',
+      manifestFilename: 'manifest.webmanifest'
     })
   ],
   server: {

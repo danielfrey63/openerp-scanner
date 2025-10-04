@@ -20,9 +20,11 @@ Der OpenERP Scanner kann als native App auf Ihrem Gerät installiert werden - oh
 
 ### **Schnellinstallation (Empfohlen)**
 1. App öffnen: `https://openerp-scanner.vercel.app`
-2. Installationsaufforderung abwarten (erscheint automatisch nach wenigen Sekunden)
-3. "Installieren" klicken
+2. Installationsaufforderung abwarten (erscheint automatisch nach 3-8 Sekunden)
+3. "Installieren" klicken (blaue Schaltfläche im Popup)
 4. Fertig! Die App erscheint auf Ihrem Startbildschirm
+
+**🆕 Automatische Installationsaufforderung**: Die App zeigt ein modernes Popup mit Installationsbutton an. Erscheint automatisch auf allen unterstützten Browsern.
 
 ### **Manuelle Installation**
 - **Chrome**: ⚡ Icon in Adressleiste → "App installieren"

@@ -12,12 +12,19 @@ Eine Progressive Web App (PWA) ist eine Webanwendung, die wie eine native App in
    - Rufen Sie `https://openerp-scanner.vercel.app` in Ihrem Browser auf
 
 2. **Installationsaufforderung abwarten**
-   - Nach wenigen Sekunden erscheint automatisch ein Installations-Popup
-   - Klicken Sie auf "Installieren" oder "Zum Startbildschirm hinzufügen"
+   - Nach 3-8 Sekunden erscheint automatisch ein Installations-Popup
+   - Das Popup zeigt: "App installieren" mit Beschreibung der Vorteile
+   - Klicken Sie auf "Installieren" (blaue Schaltfläche)
 
 3. **Bestätigung**
    - Die App wird auf Ihrem Gerät installiert
    - Ein Icon erscheint auf Ihrem Startbildschirm/Home-Bildschirm
+   - Die App startet im Vollbildmodus wie eine native App
+
+**Funktioniert die automatische Aufforderung nicht?**
+- Manche Browser unterdrücken die automatische Aufforderung
+- In diesem Fall verwenden Sie **Methode 2** (manuelle Installation)
+- Die App erkennt automatisch, ob die automatische Aufforderung verfügbar ist
 
 ### Methode 2: Manuelle Installation über Browser-Menü
 
@@ -63,6 +70,36 @@ Eine Progressive Web App (PWA) ist eine Webanwendung, die wie eine native App in
 - ✅ macOS 11+ (Desktop)
 - ✅ Linux (Desktop)
 
+## 🎯 Automatische Installationsaufforderung (Neu in v1.0.0)
+
+### **Wie die Aufforderung funktioniert**
+Die OpenERP Scanner App zeigt automatisch eine benutzerfreundliche Installationsaufforderung:
+
+#### **Timing**
+- **Primär**: Nach 3 Sekunden (wenn `beforeinstallprompt` Event verfügbar)
+- **Fallback**: Nach 8 Sekunden (wenn PWA-Kriterien erfüllt sind)
+- **Intelligent**: Nur wenn App nicht bereits installiert ist
+
+#### **Erscheinungsbild**
+- **Position**: Unten am Bildschirmrand (responsive Design)
+- **Design**: Modernes Card-Design mit Blur-Effekt
+- **Inhalt**:
+  - 📱 Icon und "App installieren" Titel
+  - Beschreibung der Vorteile
+  - "Installieren" und "Später" Buttons
+
+#### **Funktionen**
+- **Automatisch**: Erscheint ohne Benutzerinteraktion
+- **Intelligent**: Erkennt installierte Apps und zeigt keine Aufforderung
+- **Session-basiert**: "Später" merkt sich die Entscheidung für die aktuelle Session
+- **Browser-kompatibel**: Funktioniert auf allen unterstützten Browsern
+
+### **Was passiert bei der Installation?**
+1. **Klick auf "Installieren"** → Browser-Installationsdialog öffnet sich
+2. **Bestätigung** → App wird auf dem Gerät installiert
+3. **Icon erscheint** → Auf Startbildschirm/Home-Bildschirm
+4. **App startet** → Im Vollbildmodus wie native App
+
 ## 🎯 Nach der Installation
 
 ### **Starten der App**
@@ -96,20 +133,32 @@ Eine Progressive Web App (PWA) ist eine Webanwendung, die wie eine native App in
 ## 🔧 Fehlerbehebung
 
 ### **Installationsaufforderung erscheint nicht**
-1. **Browser-Cache leeren**
+1. **Automatische Aufforderung abwarten**
+   - Die Aufforderung erscheint nach 3-8 Sekunden automatisch
+   - Warten Sie mindestens 10 Sekunden bevor Sie manuell installieren
+
+2. **Browser-Cache leeren**
    - Drücken Sie `Ctrl+Shift+R` (Windows) oder `Cmd+Shift+R` (Mac)
    - Oder leeren Sie den Browser-Cache über die Einstellungen
 
-2. **HTTPS-Verbindung prüfen**
+3. **HTTPS-Verbindung prüfen**
    - Stellen Sie sicher, dass `https://` in der URL steht
    - Die App funktioniert nur über sichere HTTPS-Verbindungen
 
-3. **Browser aktualisieren**
+4. **Browser aktualisieren**
    - Stellen Sie sicher, dass Ihr Browser auf dem neuesten Stand ist
    - Alte Browser unterstützen möglicherweise keine PWA-Installation
 
-4. **Speicherplatz prüfen**
+5. **Speicherplatz prüfen**
    - Stellen Sie sicher, dass genügend Speicherplatz auf Ihrem Gerät verfügbar ist
+
+6. **App bereits installiert prüfen**
+   - Suchen Sie auf Ihrem Startbildschirm nach dem "OpenERP Scanner" Icon
+   - Wenn bereits installiert, erscheint keine Aufforderung
+
+7. **Manuelle Installation versuchen**
+   - Verwenden Sie die manuelle Installationsmethode (siehe Methode 2)
+   - Die automatische Aufforderung wird von einigen Browsern unterdrückt
 
 ### **App startet nicht**
 1. **Internetverbindung prüfen** (für erste Nutzung)

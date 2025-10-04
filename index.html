@@ -125,13 +125,45 @@
 
       // PWA Install Prompt
       let deferredPrompt;
+      let installPromptShown = false;
+      
+      // Enhanced beforeinstallprompt handling
       window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
+        // Don't prevent default immediately - let it show first
+        console.log('PWA install prompt event received:', e);
+        
+        // Store the event for later use
         deferredPrompt = e;
-
-        // Show install button or banner
+        
+        // Show our custom install button/banner
         window.dispatchEvent(new CustomEvent('pwa-installable'));
+        
+        // Don't prevent default to allow native prompt
+        // e.preventDefault(); // Commented out to allow native prompt
       });
+
+      // Listen for app installed event
+      window.addEventListener('appinstalled', (e) => {
+        console.log('PWA was installed:', e);
+        installPromptShown = true;
+        // Notify React components about installation
+        window.dispatchEvent(new CustomEvent('pwa-installed'));
+      });
+
+      // Fallback: Manually trigger install prompt after delay
+      setTimeout(() => {
+        if (!installPromptShown && !deferredPrompt) {
+          // Check if PWA criteria are met
+          const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                            window.navigator.standalone ||
+                            document.referrer.includes('android-app://');
+          
+          if (!isStandalone && 'serviceWorker' in navigator && location.protocol === 'https:') {
+            console.log('PWA criteria met, triggering installable event');
+            window.dispatchEvent(new CustomEvent('pwa-installable'));
+          }
+        }
+      }, 5000); // 5 seconds delay
 
       // PWA Install function (can be called from app)
       window.installPWA = async () => {
@@ -140,9 +172,27 @@
           const { outcome } = await deferredPrompt.userChoice;
           console.log('PWA install outcome:', outcome);
           deferredPrompt = null;
+          installPromptShown = true;
           return outcome === 'accepted';
+        } else {
+          // Fallback: Show manual install instructions
+          console.log('No deferred prompt available, showing manual instructions');
+          const userAgent = navigator.userAgent.toLowerCase();
+          let instructions = '';
+          
+          if (userAgent.includes('safari') && !userAgent.includes('chrome')) {
+            instructions = 'Safari: Tippen Sie auf "Teilen" → "Zum Startbildschirm hinzufügen"';
+          } else if (userAgent.includes('chrome')) {
+            instructions = 'Chrome: Klicken Sie auf das ⚡ Icon in der Adressleiste → "App installieren"';
+          } else if (userAgent.includes('firefox')) {
+            instructions = 'Firefox: Klicken Sie auf das ≡ Menü → "Diese App installieren"';
+          } else {
+            instructions = 'Suchen Sie im Browser-Menü nach "App installieren" oder "Zum Startbildschirm hinzufügen"';
+          }
+          
+          alert(`OpenERP Scanner installieren:\n\n${instructions}\n\noder besuchen Sie die Installationsanleitung in der App.`);
+          return false;
         }
-        return false;
       };
 
       // Network status detection
