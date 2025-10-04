@@ -23,9 +23,13 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ className = '' }) =
 
     // Listen for PWA installable event
     const handleInstallable = () => {
+      console.log('PWAInstallPrompt: Received pwa-installable event');
       setIsInstallable(true);
       // Show prompt after a delay to not be too intrusive
-      setTimeout(() => setShowPrompt(true), 3000);
+      setTimeout(() => {
+        console.log('PWAInstallPrompt: Showing prompt');
+        setShowPrompt(true);
+      }, 2000); // Reduced delay for better UX
     };
 
     window.addEventListener('pwa-installable', handleInstallable);
@@ -45,9 +49,13 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ className = '' }) =
       if (!isStandalone && 'serviceWorker' in navigator && location.protocol === 'https:') {
         console.log('PWAInstallPrompt: Fallback trigger - PWA criteria met');
         setIsInstallable(true);
-        setTimeout(() => setShowPrompt(true), 2000);
+        // Show immediately for fallback since beforeinstallprompt didn't work
+        setTimeout(() => {
+          console.log('PWAInstallPrompt: Showing fallback prompt');
+          setShowPrompt(true);
+        }, 1000); // Shorter delay for fallback
       }
-    }, 8000); // 8 seconds delay as fallback
+    }, 6000); // Reduced to 6 seconds for better UX
 
     return () => {
       window.removeEventListener('pwa-installable', handleInstallable);
@@ -85,14 +93,28 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({ className = '' }) =
   };
 
   // Don't show if already installed or dismissed
-  if (isStandalone || !isInstallable || !showPrompt) {
+  if (isStandalone) {
+    console.log('PWAInstallPrompt: Not showing - app is in standalone mode');
+    return null;
+  }
+
+  if (!isInstallable) {
+    console.log('PWAInstallPrompt: Not showing - app not installable');
+    return null;
+  }
+
+  if (!showPrompt) {
+    console.log('PWAInstallPrompt: Not showing - prompt not visible yet');
     return null;
   }
 
   // Check if dismissed in this session
   if (sessionStorage.getItem('pwa-install-dismissed')) {
+    console.log('PWAInstallPrompt: Not showing - dismissed in this session');
     return null;
   }
+
+  console.log('PWAInstallPrompt: Showing install prompt');
 
   return (
     <div 
