@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { orderRepo } from '@/data/orderRepo.js';
-import { syncService } from '@/services/syncService.js';
-import { networkService } from '@/services/networkService.js';
 import RefreshIcon from '@/icons/refresh-icon.svg';
-import DeleteCacheIcon from '@/icons/delete-cache.svg';
 
 interface CacheInfo {
   totalOrders: number;
@@ -22,8 +19,6 @@ const CacheDropdown: React.FC = () => {
     cacheSize: '0 MB',
     lastSyncTime: null
   });
-  const [isClearing, setIsClearing] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,78 +80,6 @@ const CacheDropdown: React.FC = () => {
     };
   }, []);
   
-  const handleClearCache = async () => {
-    if (!confirm('Sind Sie sicher, dass Sie den gesamten Cache löschen möchten? Alle lokalen Daten gehen verloren.')) {
-      return;
-    }
-    
-    setIsClearing(true);
-    setIsOpen(false);
-    
-    try {
-      // Nur Order-Cache löschen, nicht die Session-Daten
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('erp_cache_order_')) {
-          localStorage.removeItem(key);
-        }
-      });
-      
-      // Nutzungstracking löschen
-      localStorage.removeItem('orderUsage');
-      
-      // Cache-Info aktualisieren
-      setCacheInfo({
-        totalOrders: 0,
-        syncedOrders: 0,
-        pendingChanges: 0,
-        cacheSize: '0 MB',
-        lastSyncTime: null
-      });
-      
-      alert('Cache erfolgreich gelöscht. Die App wird neu geladen.');
-      window.location.reload();
-    } catch (error) {
-      console.error('Fehler beim Löschen des Cache:', error);
-      alert('Fehler beim Löschen des Cache: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler'));
-    } finally {
-      setIsClearing(false);
-    }
-  };
-  
-  const handleRefreshCache = async () => {
-    if (!networkService.isOnline()) {
-      alert('Keine Netzwerkverbindung verfügbar. Bitte stellen Sie eine Verbindung her.');
-      return;
-    }
-    
-    setIsRefreshing(true);
-    setIsOpen(false);
-    
-    try {
-      await syncService.syncAllPendingChanges();
-      
-      // Cache-Info aktualisieren
-      const allOrders = orderRepo.getAllOrderRecords();
-      const syncedCount = Object.values(allOrders).filter(
-        order => order.meta.syncStatus === 'synced'
-      ).length;
-      
-      setCacheInfo(prev => ({
-        ...prev,
-        syncedOrders: syncedCount,
-        pendingChanges: 0,
-        lastSyncTime: new Date().toISOString()
-      }));
-      
-      alert('Cache erfolgreich aktualisiert.');
-    } catch (error) {
-      console.error('Fehler beim Aktualisieren des Cache:', error);
-      alert('Fehler beim Aktualisieren des Cache: ' + (error instanceof Error ? error.message : 'Unbekannter Fehler'));
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-  
   const formatLastSyncTime = (time: string | null): string => {
     if (!time) return 'Nie';
     
@@ -216,28 +139,7 @@ const CacheDropdown: React.FC = () => {
       {isOpen && (
         <div className="cache-dropdown-menu">
           <div className="cache-dropdown-header">
-            <div className="header-with-actions">
-              <h4>Cache Status</h4>
-              <div className="header-actions">
-                <button
-                  onClick={handleRefreshCache}
-                  disabled={isRefreshing || !networkService.isOnline()}
-                  className="icon-button secondary"
-                  title="Cache aktualisieren"
-                >
-                  <img src={RefreshIcon} alt="Cache aktualisieren" />
-                </button>
-                
-                <button
-                  onClick={handleClearCache}
-                  disabled={isClearing}
-                  className="icon-button secondary"
-                  title="Cache löschen"
-                >
-                  <img src={DeleteCacheIcon} alt="Cache löschen" />
-                </button>
-              </div>
-            </div>
+            <h4>Cache Status</h4>
           </div>
           
           <div className="cache-info">
@@ -295,33 +197,11 @@ const CacheDropdown: React.FC = () => {
           border-bottom: 1px solid #444;
         }
         
-        .header-with-actions {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        
         .cache-dropdown-header h4 {
           margin: 0;
           color: #e0e0e0;
           font-size: 14px;
           font-weight: 600;
-        }
-        
-        .header-actions {
-          display: flex;
-          gap: 8px;
-        }
-        
-        .header-actions .icon-button {
-          width: 32px;
-          height: 32px;
-          padding: 4px;
-        }
-        
-        .header-actions .icon-button img {
-          width: 24px;
-          height: 24px;
         }
         
         .cache-info {

@@ -393,13 +393,83 @@ class SyncService {
 
   private setupNetworkListener() {
     networkService.addNetworkListener((status) => {
-      if (status.online && this.syncQueue.size > 0) {
-        // Auto-sync when network comes back online
+      if (status.online) {
+        // Sofortiger vollständiger Sync bei Verbindung wiederherstellung
+        console.log('[SyncService] Network restored - starting automatic sync');
         setTimeout(() => {
-          this.sync({ orderId: Array.from(this.syncQueue)[0] });
+          this.performAutomaticSync();
         }, 1000);
       }
     });
+  }
+
+  // Automatische Hintergrund-Synchronisation
+  private async performAutomaticSync(): Promise<void> {
+    if (!this.client || !networkService.getNetworkStatus().online) {
+      console.log('[SyncService] Skipping automatic sync - no client or offline');
+      return;
+    }
+
+    try {
+      console.log('[SyncService] Starting automatic background sync...');
+      
+      // 1. Zuerst alle pending Änderungen synchronisieren
+      await this.syncAllPendingChanges();
+      
+      // 2. Dann frische Daten vom ERP laden (falls Cache leer oder veraltet)
+      await this.refreshStaleData();
+      
+      console.log('[SyncService] Automatic background sync completed');
+    } catch (error) {
+      console.error('[SyncService] Automatic background sync failed:', error);
+    }
+  }
+
+  // Veraltete Daten aktualisieren
+  private async refreshStaleData(): Promise<void> {
+    const allOrders = orderRepo.getAllOrderRecords();
+    const now = Date.now();
+    const staleThreshold = 10 * 60 * 1000; // 10 Minuten
+    
+    for (const [orderIdStr, order] of Object.entries(allOrders)) {
+      const orderId = parseInt(orderIdStr);
+      const lastSync = order.meta.lastSyncedAt ? new Date(order.meta.lastSyncedAt).getTime() : 0;
+      
+      // Wenn Daten älter als 10 Minuten sind, aktualisieren
+      if (now - lastSync > staleThreshold) {
+        try {
+          console.log(`[SyncService] Refreshing stale order ${orderId}`);
+          const updatedOrder = await this.fetchServerOrder(orderId);
+          orderRepo.upsertSnapshot(orderId, updatedOrder.order, updatedOrder.lines);
+          orderRepo.markAsFullySynced(orderId);
+        } catch (error) {
+          console.error(`[SyncService] Failed to refresh order ${orderId}:`, error);
+        }
+      }
+    }
+  }
+
+  // Hintergrund-Sync starten
+  startBackgroundSync(): void {
+    // Alle 5 Minuten synchronisieren
+    setInterval(() => {
+      if (networkService.getNetworkStatus().online && !this.isSyncing) {
+        console.log('[SyncService] Starting periodic background sync');
+        this.performAutomaticSync();
+      }
+    }, 5 * 60 * 1000); // 5 Minuten
+  }
+
+  // Sync bei App-Start
+  async performStartupSync(): Promise<void> {
+    console.log('[SyncService] Performing startup sync...');
+    await this.performAutomaticSync();
+  }
+
+  // Sync bei Tab-Fokus
+  async performFocusSync(): Promise<void> {
+    console.log('[SyncService] Performing focus sync...');
+    await this.performAutomaticSync();
   }
 
   // Persistence for conflicts
