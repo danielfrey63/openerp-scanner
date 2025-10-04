@@ -18,6 +18,7 @@ import StatusFullIcon from '@/icons/status-full.svg';
 import { getLineStatus, getDeliveredQty, getOrderSession } from '@/utils/sessionStore.js';
 import { orderRepo } from '@/data/orderRepo.js';
 import { useOrderSync } from '@/hooks/useBackgroundSync.js';
+import { syncService } from '@/services/syncService.js';
 
 const OrderDetails: React.FC = () => {
   const { orderId } = useParams();
@@ -62,9 +63,7 @@ const OrderDetails: React.FC = () => {
         orderRepo.setTargetQtyFromSnapshot(oid);
         
         // Nutzung der Order tracken für intelligente Priorisierung
-        import('@/services/syncService.js').then(({ syncService }) => {
-          syncService.trackOrderUsage?.(oid);
-        });
+        syncService.trackOrderUsage?.(oid);
         
       } catch (err) {
         setError('Failed to load order lines from cache: ' + (err instanceof Error ? err.message : String(err)));

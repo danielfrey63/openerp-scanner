@@ -14,7 +14,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'qr-scanner-library': path.resolve(__dirname, '../qr-scanner-library/src'),
       stream: 'stream-browserify',
       timers: 'timers-browserify',
       buffer: 'buffer',
@@ -71,6 +70,16 @@ export default defineConfig({
     }
   },
   build: {
+    rollupOptions: {
+      onwarn(warning, warn) {
+        // Unterdrücke die Warnung über dynamische/statische Import-Inkonsistenz
+        if (warning.code === 'MIXED_IMPORTS' ||
+            (warning.message && warning.message.includes('dynamically imported by') && warning.message.includes('but also statically imported'))) {
+          return;
+        }
+        warn(warning);
+      }
+    },
     chunkSizeWarningLimit: 1000,
   }
 })
